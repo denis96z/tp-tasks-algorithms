@@ -20,6 +20,8 @@ int main() {
         size_t n = 0;
         std::cin >> n;
 
+        assert(n > 0);
+
         aArray = new int[n];
         bArray = new int[n];
 
