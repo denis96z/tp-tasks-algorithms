@@ -14,12 +14,14 @@
 void find_max_indexes(size_t &i, size_t &j, const int *a, const int *b, size_t n);
 
 int main() {
+    int *aArray = nullptr, *bArray = nullptr;
+
     try {
         size_t n = 0;
         std::cin >> n;
 
-        int *aArray = new int[n];
-        int *bArray = new int[n];
+        aArray = new int[n];
+        bArray = new int[n];
 
         for (size_t i = 0; i < n; ++i) {
             std::cin >> aArray[i];
@@ -32,9 +34,6 @@ int main() {
         size_t aIndex = 0, bIndex = 0;
         find_max_indexes(aIndex, bIndex, aArray, bArray, n);
 
-        delete[] aArray;
-        delete[] bArray;
-
         std::cout << aIndex << " " << bIndex;
     }
     catch (std::bad_alloc) {
@@ -44,23 +43,45 @@ int main() {
         PRINT_ERROR("[error]");
     }
 
+    if (aArray) delete[] aArray;
+    if (bArray) delete[] bArray;
+
     return 0;
 }
 
 void find_max_indexes(size_t &i, size_t &j, const int *a, const int *b, size_t n) {
     assert(a && b && n > 0);
 
-    j = 0;
+    i = 0; j = 0;
     for (size_t k = 1; k < n; ++k) {
+        if (a[k] > a[i]) {
+            i = k;
+        }
         if (b[k] > b[j]) {
             j = k;
         }
     }
 
-    i = 0;
-    for (size_t k = 1; k < n && k <= j; ++k) {
-        if (a[k] > a[i]) {
-            i = k;
+    if (i > j) {
+        size_t iNew = 0;
+        for (size_t k = 1; k <= j; ++k) {
+            if (a[k] > a[iNew]) {
+                iNew = k;
+            }
+        }
+
+        size_t jNew = i;
+        for (size_t k = i + 1; k < n; ++k) {
+            if (b[k] > b[jNew]) {
+                jNew = k;
+            }
+        }
+
+        if ((a[i] + b[jNew]) > (a[iNew] + b[j])) {
+            j = jNew;
+        }
+        else {
+            i = iNew;
         }
     }
 }
