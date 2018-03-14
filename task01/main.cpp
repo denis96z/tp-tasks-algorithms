@@ -11,7 +11,7 @@
 #define PRINT_ERROR(msg) \
     std::cout << msg;
 
-void find_max_indexes(size_t &i, size_t &j, const int *a, const int *b, size_t n);
+void find_max_indexes(size_t &i0, size_t &j0, const int *a, const int *b, size_t n);
 
 int main() {
     int *aArray = nullptr, *bArray = nullptr;
@@ -51,39 +51,19 @@ int main() {
     return 0;
 }
 
-void find_max_indexes(size_t &i, size_t &j, const int *a, const int *b, size_t n) {
+void find_max_indexes(size_t &i0, size_t &j0, const int *a, const int *b, size_t n) {
     assert(a && b && n > 0);
 
-    i = 0; j = 0;
-    for (size_t k = 1; k < n; ++k) {
-        if (a[k] > a[i]) {
-            i = k;
-        }
-        if (b[k] > b[j]) {
-            j = k;
-        }
-    }
-
-    if (i > j) {
-        size_t iNew = 0;
-        for (size_t k = 1; k <= j; ++k) {
-            if (a[k] > a[iNew]) {
-                iNew = k;
-            }
+    i0 = 0, j0 = 0;
+    int temp = 0;
+    for (int k = 0; k < n; ++k) {
+        if (a[temp] < a[k]) {
+            temp = k;
         }
 
-        size_t jNew = i;
-        for (size_t k = i + 1; k < n; ++k) {
-            if (b[k] > b[jNew]) {
-                jNew = k;
-            }
-        }
-
-        if ((a[i] + b[jNew]) > (a[iNew] + b[j])) {
-            j = jNew;
-        }
-        else {
-            i = iNew;
+        if (a[i0] + b[j0] < a[temp] + b[k] && k >= temp) {
+            j0 = k;
+            i0 = temp;
         }
     }
 }
