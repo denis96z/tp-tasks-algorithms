@@ -61,6 +61,7 @@ void find_max_indexes(size_t &i0, size_t &j0, const int *a, const int *b, size_t
             temp = k;
         }
 
+        // Необходимо, чтобы индекс в первом массиве не превосходил индекс во втором.
         if (a[i0] + b[j0] < a[temp] + b[k] && k >= temp) {
             j0 = k;
             i0 = temp;
