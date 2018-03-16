@@ -4,19 +4,19 @@
 #include <exception>
 
 class bad_input : public std::exception {
-public:
-    bad_input(const char *msg) _GLIBCXX_USE_NOEXCEPT : msg(msg) {
-        //NOP
-    }
+	public:
+		bad_input(const char *msg) noexcept : msg(msg) {
+			//NOP
+		}
 
-    virtual ~bad_input() _GLIBCXX_USE_NOEXCEPT = default;
+		~bad_input() noexcept override = default;
 
-    const char* what() const _GLIBCXX_USE_NOEXCEPT override {
-        return msg;
-    }
+		const char* what() const noexcept override {
+			return msg;
+		}
 
-private:
-    const char *msg = nullptr;
+	private:
+		const char *msg = nullptr;
 };
 
 #endif //BAD_INPUT_H

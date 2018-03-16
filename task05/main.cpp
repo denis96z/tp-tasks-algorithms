@@ -1,5 +1,7 @@
-/* ------------------------- Задача 5.3 --------------------------------
- *
+/* ------------------------- Задача 5.3 ---------------------------------
+ * На числовой прямой окрасили N отрезков. Известны координаты левого и
+ * правого концов каждого отрезка (Li и Ri). Найти длину окрашенной части
+ * числовой прямой.
  */
 
 #include <iostream>
@@ -28,8 +30,8 @@ int main() {
             throw bad_input("Number of line segments should be greater than 0.");
         }
 
-        size_t numPoints = numSeg << 1;
-        point_t *points = new point_t[numPoints];
+	    const auto numPoints = numSeg << 1;
+	    points = new point_t[numPoints];
 
         for (size_t i = 0; i < numPoints; i += 2) {
             std::cin >> points[i].x;
@@ -43,15 +45,15 @@ int main() {
             points[i + 1].isFirst = false;
         }
 
-        int segLength = count_total_segment_length(points, numPoints);
+	    const auto segLength = count_total_segment_length(points, numPoints);
         std::cout << segLength;
 
         delete[] points;
     }
-    catch (std::bad_alloc) {
+    catch (std::bad_alloc&) {
         PRINT_ERROR("[out of memory]");
     }
-    catch (bad_input exc) {
+    catch (bad_input &exc) {
         PRINT_ERROR(exc.what());
     }
     catch (...) {
@@ -68,17 +70,12 @@ int count_total_segment_length(point_t *points, size_t numPoints) {
         return left.x - right.x;
     });
 
-    for (size_t i = 0; i < numPoints; i++) {
-        std::cout << points[i].x << " ";
-    }
-    std::cout << std::endl;
-
     // Первая точка обязательно должна быть началом отрезка.
     assert(points[0].isFirst);
     // Количество наложенных друг на друга отрезков.
     size_t numSeg = 1;
 
-    int segLength = 0;
+	auto segLength = 0;
     for (size_t i = 1; i < numPoints; ++i) {
         if (numSeg) {
             segLength += points[i].x - points[i - 1].x;
