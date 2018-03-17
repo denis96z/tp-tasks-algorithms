@@ -97,13 +97,13 @@ void Deque<T>::IncBuffer(size_t newLength) {
     auto *newBuffer = new T[newLength];
     if (firstIndex == lastIndex) {
         auto tempIndex = bufferLength - lastIndex;
-        memmove(newBuffer, buffer + firstIndex, tempIndex * sizeof(T));
-        memmove(newBuffer + tempIndex, buffer, lastIndex * sizeof(T));
+        memcpy(newBuffer, buffer + firstIndex, tempIndex * sizeof(T));
+        memcpy(newBuffer + tempIndex, buffer, lastIndex * sizeof(T));
         firstIndex = 0;
         lastIndex = numItems;
     }
     else {
-        memmove(newBuffer, buffer, bufferLength * sizeof(T));
+        memcpy(newBuffer, buffer, bufferLength * sizeof(T));
     }
 
     delete[] buffer;
