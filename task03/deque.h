@@ -32,10 +32,10 @@ class Deque {
         size_t firstIndex = 0;
         size_t lastIndex = 0;
 
-        void IncBufferLengthIfNecessary();
-        void DecBufferLengthIfNecessary();
+        void IncBufferIfNecessary();
+        void DecBufferIfNecessary();
 
-        void ReallocBuffer(size_t newLength);
+        void IncBuffer(size_t newLength);
 };
 
 #include "deque.hpp"

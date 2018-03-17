@@ -4,6 +4,7 @@
 #include <new>
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 
 #define INITIAL_DEQUE_BUFFER_LENGTH 16
 
@@ -13,11 +14,9 @@
     ((value) + (value))
 
 template <typename T>
-void shrmem(T *dest, T *src, size_t n);
-
-template <typename T>
-Deque<T>::Deque() : buffer(nullptr), bufferLength(0) {
-    ReallocBuffer(INITIAL_DEQUE_BUFFER_LENGTH);
+Deque<T>::Deque() : buffer(nullptr) {
+    buffer = new T[INITIAL_DEQUE_BUFFER_LENGTH];
+    bufferLength = INITIAL_DEQUE_BUFFER_LENGTH;
 }
 
 template <typename T>
@@ -28,7 +27,7 @@ Deque<T>::~Deque() {
 
 template <typename T>
 void Deque<T>::PushBack(T item) {
-    IncBufferLengthIfNecessary();
+    IncBufferIfNecessary();
     if (lastIndex == bufferLength) lastIndex = 0;
     buffer[lastIndex++] = item;
     ++numItems;
@@ -36,7 +35,7 @@ void Deque<T>::PushBack(T item) {
 
 template <typename T>
 void Deque<T>::PushFront(T item) {
-    IncBufferLengthIfNecessary();
+    IncBufferIfNecessary();
 
     firstIndex == 0 ? firstIndex = bufferLength - 1 : --firstIndex;
     buffer[firstIndex] = item;
@@ -52,7 +51,7 @@ T Deque<T>::PopFront() {
     if (firstIndex == bufferLength) firstIndex = 0;
 
     --numItems;
-    DecBufferLengthIfNecessary();
+    DecBufferIfNecessary();
 
     return item;
 }
@@ -65,7 +64,7 @@ T Deque<T>::PopBack() {
     T item = buffer[lastIndex];
 
     --numItems;
-    DecBufferLengthIfNecessary();
+    DecBufferIfNecessary();
 
     return item;
 }
@@ -78,42 +77,39 @@ bool Deque<T>::IsEmpty() const {
 template <typename T>
 void Deque<T>::Clear() {
     firstIndex = lastIndex = numItems = 0;
-    ReallocBuffer(INITIAL_DEQUE_BUFFER_LENGTH);
+    delete[] buffer;
+    buffer = new T[INITIAL_DEQUE_BUFFER_LENGTH];
 }
 
 template <typename T>
-void Deque<T>::IncBufferLengthIfNecessary() {
+void Deque<T>::IncBufferIfNecessary() {
     if (numItems == bufferLength) {
-        ReallocBuffer(DOUBLE(bufferLength));
-        if (firstIndex == lastIndex) {
-            firstIndex = bufferLength - (numItems - firstIndex);
-            shrmem<T>(buffer + firstIndex, buffer + lastIndex, numItems - lastIndex);
-        }
+        IncBuffer(DOUBLE(bufferLength));
     }
 }
 
 template <typename T>
-void Deque<T>::DecBufferLengthIfNecessary() {
+void Deque<T>::DecBufferIfNecessary() {
     //TODO
 }
 
 template <typename T>
-void Deque<T>::ReallocBuffer(size_t newLength) {
-    T *newBuffer = (T*)realloc(buffer, newLength * sizeof(T));
-    if (!newBuffer) {
-        throw std::bad_alloc();
+void Deque<T>::IncBuffer(size_t newLength) {
+    auto *newBuffer = new T[newLength];
+    if (firstIndex == lastIndex) {
+        auto tempIndex = bufferLength - lastIndex;
+        memmove(newBuffer, buffer + firstIndex, tempIndex * sizeof(T));
+        memmove(newBuffer + tempIndex, buffer, lastIndex * sizeof(T));
+        firstIndex = 0;
+        lastIndex = numItems;
+    }
+    else {
+        memmove(newBuffer, buffer, bufferLength * sizeof(T));
     }
 
+    delete[] buffer;
     buffer = newBuffer;
     bufferLength = newLength;
-}
-
-template <typename T>
-void shrmem(T *dest, T *src, size_t n) {
-    assert(n > 0);
-    for (size_t i = n; i > 0; --i) {
-        dest[i - 1] = src[i - 1];
-    }
 }
 
 #endif //DEQUE_HPP
