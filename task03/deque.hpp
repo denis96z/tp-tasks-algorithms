@@ -21,8 +21,7 @@ Deque<T>::Deque() : buffer(nullptr) {
 
 template <typename T>
 Deque<T>::~Deque() {
-    free(buffer);
-    buffer = nullptr;
+    delete[] buffer;
 }
 
 template <typename T>
