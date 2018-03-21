@@ -19,7 +19,8 @@ class BinaryHeap {
         void Add(const T &item);
         void Add(T &&item);
 
-        T& ExtractMax();
+        const T& PeekMax() const;
+        T ExtractMax();
 
         const T& operator[](size_t index) const;
 
@@ -27,7 +28,7 @@ class BinaryHeap {
         bool IsEmpty() const;
 
     private:
-        static const MIN_BUFFER_LENGTH = 16;
+        static const size_t MIN_BUFFER_LENGTH = 16;
 
         T *buffer = nullptr;
         size_t bufferLength = 0;
@@ -42,6 +43,6 @@ class BinaryHeap {
         void SiftDown(size_t index);
 };
 
-
+#include "binary_heap.hpp"
 
 #endif //BINARY_HEAP_H

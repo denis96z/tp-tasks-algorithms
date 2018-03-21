@@ -1,5 +1,3 @@
-#include "binary_heap.h"
-
 #include <cstring>
 #include <algorithm>
 #include <cassert>
@@ -48,13 +46,13 @@ BinaryHeap<T>::~BinaryHeap() {
 }
 
 template<typename T>
-BinaryHeap &BinaryHeap<T>::operator=(const BinaryHeap &heap) {
+BinaryHeap<T> &BinaryHeap<T>::operator=(const BinaryHeap &heap) {
     CopyFrom(heap);
     return *this;
 }
 
 template<typename T>
-BinaryHeap &BinaryHeap<T>::operator=(BinaryHeap &&heap) noexcept {
+BinaryHeap<T> &BinaryHeap<T>::operator=(BinaryHeap &&heap) noexcept {
     buffer = heap.buffer;
     bufferLength = heap.bufferLength;
     numItems = heap.numItems;
@@ -76,7 +74,13 @@ void BinaryHeap<T>::Add(T &&item) {
 }
 
 template<typename T>
-T &BinaryHeap<T>::ExtractMax() {
+const T &BinaryHeap<T>::PeekMax() const {
+    assert(numItems);
+    return buffer[0];
+}
+
+template<typename T>
+T BinaryHeap<T>::ExtractMax() {
     assert(numItems);
 
     auto result = buffer[0];
@@ -120,6 +124,7 @@ void BinaryHeap<T>::IncBufferIfNecessary() {
         memcpy(temp, buffer, numItems * sizeof(T));
         delete[] buffer;
         buffer = temp;
+        bufferLength = DOUBLE(bufferLength);
     }
 }
 
@@ -130,12 +135,14 @@ void BinaryHeap<T>::DecBufferIfPossible() {
         memcpy(temp, buffer, numItems * sizeof(T));
         delete[] buffer;
         buffer = temp;
+        bufferLength = HALF(bufferLength);
     }
 }
 
 template<typename T>
 void BinaryHeap<T>::SiftUp(size_t index) {
-    assert(index > 0 && index < numItems);
+    assert(index >= 0 && index < numItems);
+
     while (index > 0) {
         auto parentIndex = HALF(index - 1);
         if (buffer[index] <= buffer[parentIndex]) {
@@ -149,7 +156,7 @@ void BinaryHeap<T>::SiftUp(size_t index) {
 
 template<typename T>
 void BinaryHeap<T>::SiftDown(size_t index) {
-    assert(index > 0 && index < numItems);
+    assert(index >= 0 && index < numItems);
 
     auto leftIndex = DOUBLE(index) + 1;
     auto rightIndex = DOUBLE(index) + 2;
