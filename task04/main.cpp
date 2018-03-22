@@ -54,21 +54,43 @@ int main() {
 #define MAX(x,y) \
     (((x) > (y)) ? (x) : (y))
 
+template <typename T>
+class SizedHeap {
+    private:
+        BinaryHeap<T> heap;
+        size_t maxHeapSize = 0;
+
+    public:
+        inline void Add(const T &value){
+            heap.Add(value);
+            maxHeapSize = MAX(maxHeapSize, heap.GetNumItems());
+        }
+
+        inline const T &PeekMax() const {
+            return heap.PeekMax();
+        }
+
+        inline T ExtractMax() {
+            return heap.ExtractMax();
+        }
+
+        inline size_t GetMaxSize() const {
+            return maxHeapSize;
+        }
+};
+
 size_t count_dead_ends(timetable_t *timetables, size_t numTrains) {
     assert(timetables && numTrains > 0);
 
-    BinaryHeap<int> heap;
+    SizedHeap<int> heap;
     heap.Add(timetables[0].departure);
 
-    size_t maxHeapSize = 1;
     for (size_t i = 1; i < numTrains; ++i) {
         if (abs(heap.PeekMax()) < timetables[i].arrival) {
             heap.ExtractMax();
         }
-        maxHeapSize = MAX(maxHeapSize, heap.GetNumItems());
         heap.Add(-timetables[i].departure);
     }
-    maxHeapSize = MAX(maxHeapSize, heap.GetNumItems());
 
-    return maxHeapSize;
+    return heap.GetMaxSize();
 }
