@@ -17,9 +17,13 @@ int main() {
 
     try {
         std::cin >> numTrains;
+        if (numTrains <= 0) {
+            throw std::bad_exception();
+        }
+
         timetables = new timetable_t[numTrains];
 
-        for (auto i = 0; i < numTrains; ++i) {
+        for (size_t i = 0; i < numTrains; ++i) {
             std::cin >> timetables[i].arrival >> timetables[i].departure;
             if (timetables[i].departure < timetables[i].arrival) {
                 throw std::bad_exception();
@@ -33,7 +37,8 @@ int main() {
         PRINT_ERROR("[Failed to allocate memory.]");
     }
     catch (std::bad_exception& badInputExc) {
-        PRINT_ERROR("[Departure time is expected to be greater than arrival time.]");
+        PRINT_ERROR(std::string("[Number of trains is expected to be greater than zero.\n") +
+            std::string("Departure time is expected to be greater than arrival time.]"));
     }
     catch (...) {
         PRINT_ERROR("[error]");
@@ -55,14 +60,15 @@ size_t count_dead_ends(timetable_t *timetables, size_t numTrains) {
     BinaryHeap<int> heap;
     heap.Add(timetables[0].departure);
 
-    auto maxHeapSize = 0;
-    for (auto i = 1; i < numTrains; ++i) {
-        maxHeapSize = MAX(maxHeapSize, heap.GetNumItems());
-        if (heap.PeekMax() < timetables[i].arrival) {
+    size_t maxHeapSize = 1;
+    for (size_t i = 1; i < numTrains; ++i) {
+        if (abs(heap.PeekMax()) < timetables[i].arrival) {
             heap.ExtractMax();
         }
-        heap.Add(timetables[i].departure);
+        maxHeapSize = MAX(maxHeapSize, heap.GetNumItems());
+        heap.Add(-timetables[i].departure);
     }
+    maxHeapSize = MAX(maxHeapSize, heap.GetNumItems());
 
     return maxHeapSize;
 }
