@@ -83,7 +83,7 @@ size_t count_dead_ends(timetable_t *timetables, size_t numTrains) {
     assert(timetables && numTrains > 0);
 
     SizedHeap<int> heap;
-    heap.Add(timetables[0].departure);
+    heap.Add(-timetables[0].departure);
 
     for (size_t i = 1; i < numTrains; ++i) {
         if (abs(heap.PeekMax()) < timetables[i].arrival) {
