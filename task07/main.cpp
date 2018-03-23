@@ -64,7 +64,7 @@ void srt(T *numbers, size_t n) {
 
 template <typename T>
 inline uint8_t get_byte(const T &x, uint8_t k) {
-    return (uint8_t)(x << (k << 3));
+    return (uint8_t)(x >> (k << 3));
 }
 
 template <typename T>
