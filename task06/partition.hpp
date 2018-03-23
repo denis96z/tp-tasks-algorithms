@@ -12,42 +12,42 @@ T &find_k_stat(T *array, size_t n, size_t k, compare_f(compFunc)) {
     assert(array && compFunc);
     assert(n > 0 && k >= 0 && k < n);
 
+    size_t firstIndex = 0;
+    size_t lastIndex = n - 1;
+
     while (true) {
-        size_t p = partition(array, n, compFunc);
+        size_t p = partition(array, firstIndex, lastIndex, compFunc);
         if (p < k) {
-            size_t d = p + 1;
-            array += d;
-            n -= d;
-            k -= d;
+            firstIndex = p + 1;
         }
         else if (p > k) {
-            n = p;
+            lastIndex = p - 1;
         }
         else {
-            return array[k];
+            return array[p];
         }
     }
 }
 
 template <typename T>
-size_t partition(T *array, size_t n, compare_f(compFunc)) {
-    assert(array && compFunc && n > 0);
+size_t partition(T *array, size_t firstIndex, size_t lastIndex, compare_f(compFunc)) {
+    assert(array && compFunc);
 
-    if (n == 1) {
-        return 0;
-    }
+    size_t pivotIndex = select_pivot(array, firstIndex, lastIndex, compFunc);
+    std::swap(array[firstIndex], array[pivotIndex]);
 
-    size_t pivotIndex = select_pivot(array, n, compFunc);
-    std::swap(array[pivotIndex], array[0]);
-
-    size_t i = n, j = n - 1;
-    for (/*NOP*/; j > 0; --j) {
-        if (compFunc(array[j], array[0]) >= 0) {
-            std::swap(array[j], array[--i]);
+    size_t i = lastIndex, j = lastIndex;
+    while(j > firstIndex) {
+        while (j > firstIndex && compFunc(array[j], array[firstIndex]) <= 0) {
+            --j;
+        }
+        while (j > firstIndex && compFunc(array[j], array[firstIndex]) > 0) {
+            std::swap(array[j], array[i]);
+            --j, --i;
         }
     }
 
-    std::swap(array[--i], array[0]);
+    std::swap(array[i], array[firstIndex]);
     return i;
 }
 
@@ -60,12 +60,10 @@ int default_compare(const T &first, const T &second) {
 }
 
 template <typename T>
-size_t select_pivot(const T *array, size_t n, compare_f(compFunc)) {
-    assert(array && compFunc && n > 0);
+size_t select_pivot(const T *array, size_t firstIndex, size_t lastIndex, compare_f(compFunc)) {
+    assert(array && compFunc);
 
-    const size_t firstIndex = 0;
-    const size_t midIndex = HALF(n);
-    const size_t lastIndex = n - 1;
+    const size_t midIndex = HALF(firstIndex + lastIndex);
 
     if (compFunc(array[firstIndex], array[midIndex]) < 0) {
         return compFunc(array[midIndex], array[lastIndex]) < 0 ? midIndex : lastIndex;
