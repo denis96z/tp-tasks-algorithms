@@ -49,20 +49,6 @@ int main() {
 #define BITS_IN_BYTE 256
 
 template <typename T>
-void srt(T *numbers, size_t n) {
-    size_t numBits = sizeof(uint8_t) * BITS_IN_BYTE;
-    auto count = new uint8_t[numBits];
-
-    for (size_t k = 0; k < sizeof(T); ++k) {
-        for (size_t i = 0; i < numBits; ++i) {
-
-        }
-    }
-
-    delete[] count;
-}
-
-template <typename T>
 inline uint8_t get_byte(const T &x, uint8_t k) {
     return (uint8_t)(x >> (k << 3));
 }
