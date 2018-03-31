@@ -62,14 +62,7 @@ int default_compare(const T &first, const T &second) {
 template <typename T>
 size_t select_pivot(const T *array, size_t firstIndex, size_t lastIndex, compare_f(compFunc)) {
     assert(array && compFunc);
-
-    const size_t midIndex = HALF(firstIndex + lastIndex);
-
-    if (compFunc(array[firstIndex], array[midIndex]) < 0) {
-        return compFunc(array[midIndex], array[lastIndex]) < 0 ? midIndex : lastIndex;
-    }
-
-    return compFunc(array[firstIndex], array[lastIndex]) < 0 ? firstIndex : lastIndex;
+    return firstIndex == lastIndex ? firstIndex : (rand() % (lastIndex - firstIndex)) + firstIndex;
 }
 
 #endif //PARTITION_HPP
