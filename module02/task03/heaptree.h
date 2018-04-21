@@ -102,17 +102,19 @@ bool HeapTree<T, P, C, TR>::Has(const std::pair<T, P> &item) const {
 
 template<typename T, typename P, typename C, typename TR>
 bool HeapTree<T, P, C, TR>::IsEmpty() const {
-    throw NotImplementedException();
+    return rootNode == nullptr;
 }
 
 template<typename T, typename P, typename C, typename TR>
 Tree<std::pair<T, P>, C, TR> &HeapTree<T, P, C, TR>::Insert(const std::pair<T, P> &item) {
-    throw NotImplementedException();
+    TryInsert(item);
+    return *this;
 }
 
 template<typename T, typename P, typename C, typename TR>
 Tree<std::pair<T, P>, C, TR> &HeapTree<T, P, C, TR>::Delete(const std::pair<T, P> &item) {
-    throw NotImplementedException();
+    TryDelete(item);
+    return *this;
 }
 
 template<typename T, typename P, typename C, typename TR>
@@ -152,12 +154,12 @@ void HeapTree<T, P, C, TR>::LevelOrderTraverse() {
 
 template<typename T, typename P, typename C, typename TR>
 Tree<std::pair<T, P>, C, TR> &HeapTree<T, P, C, TR>::operator<<(const std::pair<T, P> &item) {
-    throw NotImplementedException();
+    return Insert(item);
 }
 
 template<typename T, typename P, typename C, typename TR>
 Tree<std::pair<T, P>, C, TR> &HeapTree<T, P, C, TR>::operator>>(const std::pair<T, P> &item) {
-    throw NotImplementedException();
+    return Delete(item);
 }
 
 template<typename T, typename P, typename C, typename TR>
@@ -165,13 +167,34 @@ void HeapTree<T, P, C, TR>::Split(HeapTree::TreeNode *curNode,
                                   const T &key,
                                   HeapTree::TreeNode *&leftNode,
                                   HeapTree::TreeNode *&rightNode) {
-    throw NotImplementedException();
+    if (!curNode) {
+        leftNode = nullptr;
+        rightNode = nullptr;
+    } else if (this->GetComparator().ApplyToFirst(curNode->item.first, key) <= 0) {
+        Split(curNode->rightNode, key, curNode->rightNode, rightNode);
+        leftNode = curNode;
+    } else {
+        Split(curNode->leftNode, key, leftNode, curNode->leftNode);
+        rightNode = curNode;
+    }
 }
 
 template <typename T, typename P, typename C, typename TR>
 typename HeapTree<T, P, C, TR>::TreeNode*
 HeapTree<T, P, C, TR>::Merge(TreeNode* leftNode, TreeNode* rightNode) {
-    throw NotImplementedException();
+    if (!leftNode || !rightNode) {
+        return !leftNode ? rightNode : leftNode;
+    }
+    if (this->GetComparator()
+            .ApplyToSecond(leftNode->item.second,
+                           rightNode->item.second) > 0) {
+        leftNode->rightNode = Merge(leftNode->rightNode, rightNode);
+        return leftNode;
+    }
+    else {
+        rightNode->leftNode = Merge(leftNode, rightNode->leftNode);
+        return rightNode;
+    }
 }
 
 #endif //HEAPTREE_H
