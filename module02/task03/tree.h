@@ -42,6 +42,9 @@ class Tree : public Container<T, C> {
         virtual const T& FindMin() const noexcept(false) = 0;
         virtual const T& FindMax() const noexcept(false) = 0;
 
+        virtual size_t CountMaxWidth() const = 0;
+        virtual size_t CountMaxHeight() const = 0;
+
         virtual void PreOrderTraverse() = 0;
         virtual void InOrderTraverse() = 0;
         virtual void PostOrderTraverse() = 0;

@@ -16,8 +16,8 @@ class PairComparator : public Comparator<std::pair<T_FIRST, T_SECOND>> {
         PairComparator& operator =(const PairComparator &comparator) = default;
         PairComparator& operator =(PairComparator &&comparator) noexcept = default;
 
-        virtual int ApplyToFirst(const T_FIRST &left, const T_FIRST &right) = 0;
-        virtual int ApplyToSecond(const T_SECOND &left, const T_SECOND &right) = 0;
+        virtual int ApplyToFirst(const T_FIRST &left, const T_FIRST &right) const = 0;
+        virtual int ApplyToSecond(const T_SECOND &left, const T_SECOND &right) const = 0;
 };
 
 template <typename T, typename P,
@@ -46,6 +46,9 @@ class HeapTree : public Tree<std::pair<T, P>, C, TR> {
         const std::pair<T, P> &FindMin() const override;
         const std::pair<T, P> &FindMax() const override;
 
+        size_t CountMaxWidth() const override;
+        size_t CountMaxHeight() const override;
+
         void PreOrderTraverse() override;
         void InOrderTraverse() override;
         void PostOrderTraverse() override;
@@ -68,6 +71,9 @@ class HeapTree : public Tree<std::pair<T, P>, C, TR> {
         void Split(TreeNode *curNode, const T &key,
                    TreeNode *&leftNode, TreeNode *&rightNode);
         TreeNode* Merge(TreeNode *leftNode, TreeNode *rightNode);
+
+        size_t CountWidth(const TreeNode *node, size_t level) const;
+        size_t CountHeight(const TreeNode *node) const;
 };
 
 template <typename T_FIRST, typename T_SECOND>
@@ -87,12 +93,53 @@ HeapTree<T, P, C, TR>::~HeapTree() noexcept {
 
 template<typename T, typename P, typename C, typename TR>
 bool HeapTree<T, P, C, TR>::TryInsert(const std::pair<T, P> &item) {
-    throw NotImplementedException();
+    auto curPtr = &rootNode;
+    while (*curPtr) {
+        auto curNode = *curPtr;
+
+        auto cmpPriority = this->GetComparator()
+                .ApplyToSecond(curNode->item.second, item.second);
+        if (cmpPriority < 0) {
+            break;
+        }
+
+        auto cmpKeys = this->GetComparator()
+                .ApplyToFirst(curNode->item.first, item.first);
+        curPtr = &((cmpKeys <= 0) ? curNode->rightNode : curNode->leftNode);
+    }
+
+    TreeNode *leftNode = nullptr, *rightNode = nullptr;
+    Split(*curPtr, item.first, leftNode, rightNode);
+
+    auto newNode = new TreeNode(item);
+    newNode->leftNode = leftNode;
+    newNode->rightNode = rightNode;
+    *curPtr = newNode;
+    this->IncNumItems();
+
+    return true;
 }
 
 template<typename T, typename P, typename C, typename TR>
 bool HeapTree<T, P, C, TR>::TryDelete(const std::pair<T, P> &item) {
-    throw NotImplementedException();
+    auto curPtr = &rootNode;
+    while (*curPtr) {
+        auto curNode = *curPtr;
+
+        auto cmpKeys = this->GetComparator()
+                .ApplyToFirst(curNode->item.first, item.first);
+        if (cmpKeys == 0) {
+            auto tempNode = Merge(curNode->leftNode, curNode->rightNode);
+            delete curNode;
+            *curPtr = tempNode;
+            this->DecNumItems();
+            return true;
+        }
+
+        curPtr = &((cmpKeys < 0) ? curNode->rightNode : curNode->leftNode);
+    }
+
+    return false;
 }
 
 template<typename T, typename P, typename C, typename TR>
@@ -119,7 +166,10 @@ Tree<std::pair<T, P>, C, TR> &HeapTree<T, P, C, TR>::Delete(const std::pair<T, P
 
 template<typename T, typename P, typename C, typename TR>
 Tree<std::pair<T, P>, C, TR> &HeapTree<T, P, C, TR>::Clear() {
-    throw NotImplementedException();
+    while (rootNode) {
+        Delete(rootNode->item);
+    }
+    return *this;
 }
 
 template<typename T, typename P, typename C, typename TR>
@@ -130,6 +180,25 @@ const std::pair<T, P> &HeapTree<T, P, C, TR>::FindMin() const {
 template<typename T, typename P, typename C, typename TR>
 const std::pair<T, P> &HeapTree<T, P, C, TR>::FindMax() const {
     throw NotImplementedException();
+}
+
+template<typename T, typename P, typename C, typename TR>
+size_t HeapTree<T, P, C, TR>::CountMaxWidth() const {
+    size_t maxWidth = 0;
+    size_t h = CountHeight(rootNode);
+    for (size_t i = 1; i < h; ++i)
+    {
+        auto width = CountWidth(rootNode, i);
+        if (width > maxWidth) {
+            maxWidth = width;
+        }
+    }
+    return maxWidth;
+}
+
+template<typename T, typename P, typename C, typename TR>
+size_t HeapTree<T, P, C, TR>::CountMaxHeight() const {
+    return CountHeight(rootNode);
 }
 
 template<typename T, typename P, typename C, typename TR>
@@ -195,6 +264,28 @@ HeapTree<T, P, C, TR>::Merge(TreeNode* leftNode, TreeNode* rightNode) {
         rightNode->leftNode = Merge(leftNode, rightNode->leftNode);
         return rightNode;
     }
+}
+
+template<typename T, typename P, typename C, typename TR>
+size_t HeapTree<T, P, C, TR>::CountWidth(const HeapTree::TreeNode *node, size_t level) const {
+    if (!node) {
+        return 0;
+    }
+    if (level == 1) {
+        return 1;
+    }
+    return CountWidth(node->leftNode, level - 1) +
+           CountWidth(node->rightNode, level - 1);
+}
+
+template<typename T, typename P, typename C, typename TR>
+size_t HeapTree<T, P, C, TR>::CountHeight(const HeapTree::TreeNode *node) const {
+    if(!node) {
+        return 0;
+    }
+    size_t hLeft = node->leftNode ? CountHeight(node->leftNode) : 0;
+    size_t hRight = node->rightNode ? CountHeight(node->rightNode) : 0;
+    return(std::max(hLeft, hRight) + 1);
 }
 
 #endif //HEAPTREE_H

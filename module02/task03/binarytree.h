@@ -28,6 +28,9 @@ class BinaryTree : public Tree<T, C, TR> {
         const T& FindMin() const override;
         const T& FindMax() const override;
 
+        size_t CountMaxWidth() const override;
+        size_t CountMaxHeight() const override;
+
         void PreOrderTraverse() override;
         void InOrderTraverse() override;
         void PostOrderTraverse() override;

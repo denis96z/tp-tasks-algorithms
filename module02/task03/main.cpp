@@ -8,11 +8,11 @@ public:
         throw NotImplementedException();
     }
 
-    int ApplyToFirst(const int &left, const int &right) override {
+    int ApplyToFirst(const int &left, const int &right) const override {
         return left - right;
     }
 
-    int ApplyToSecond(const int &left, const int &right) override {
+    int ApplyToSecond(const int &left, const int &right) const override {
         return left - right;
     }
 };
@@ -26,5 +26,8 @@ public:
 
 int main() {
     HeapTree<int, int, IntWithPriorCmp, IntTreeTraversal> heapTree;
+    for (int i = 0; i < 10; ++i) {
+        std::cout << heapTree.TryInsert(std::make_pair(i, rand() % 10)) << " ";
+    }
     return 0;
 }
