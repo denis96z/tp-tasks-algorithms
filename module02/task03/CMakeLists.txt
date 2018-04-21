@@ -3,4 +3,4 @@ project(task03)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(task03 main.cpp tree.h binarytree.h container.h heaptree.h pair.h)
+add_executable(task03 main.cpp tree.h binarytree.h container.h heaptree.h)

@@ -82,7 +82,7 @@ bool BinaryTree<T, C, TR>::TryInsert(const T &item) {
 
     }
     *curPtr = new TreeNode(item);
-    IncNumItems();
+    this->IncNumItems();
     return true;
 }
 
@@ -95,7 +95,7 @@ bool BinaryTree<T, C, TR>::TryDelete(const T &item) {
         int cmp = this->GetComparator().ApplyTo(item, curNode->item);
         if (cmp == 0) {
             DeleteNode(*curPtr);
-            DecNumItems();
+            this->DecNumItems();
             return true;
         }
 
