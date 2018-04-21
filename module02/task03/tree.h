@@ -51,7 +51,7 @@ class Tree : public Container<T, C> {
         virtual Tree& operator >>(const T &item) = 0;
 
     protected:
-        const TR& GetTraversal() const;
+    virtual const TR& GetTraversal() const;
 
     private:
         TR traversal{};

@@ -6,17 +6,17 @@
 
 template <typename T>
 class Comparator {
-public:
-    Comparator() = default;
-    Comparator(const Comparator &comparator) = default;
-    Comparator(Comparator &&comparator) noexcept = default;
+    public:
+        Comparator() = default;
+        Comparator(const Comparator &comparator) = default;
+        Comparator(Comparator &&comparator) noexcept = default;
 
-    virtual ~Comparator() = default;
+        virtual ~Comparator() = default;
 
-    Comparator& operator =(const Comparator &comparator) = default;
-    Comparator& operator =(Comparator &&comparator) noexcept = default;
+        Comparator& operator =(const Comparator &comparator) = default;
+        Comparator& operator =(Comparator &&comparator) noexcept = default;
 
-    virtual int ApplyTo(const T &left, const T &right) const = 0;
+        virtual int ApplyTo(const T &left, const T &right) const = 0;
 };
 
 template <typename T, typename C = Comparator<T>>
@@ -35,6 +35,8 @@ class Container {
         size_t GetNumItems() const;
 
     protected:
+        void IncNumItems();
+        void DecNumItems();
         void SetNumItems(size_t numItems);
         const C& GetComparator() const;
 
@@ -66,6 +68,16 @@ Container<T, C>::Container(size_t numItems) {
 template<typename T, typename C>
 size_t Container<T, C>::GetNumItems() const {
     return numItems;
+}
+
+template<typename T, typename C>
+void Container<T, C>::IncNumItems() {
+    ++numItems;
+}
+
+template<typename T, typename C>
+void Container<T, C>::DecNumItems() {
+    --numItems;
 }
 
 template<typename T, typename C>

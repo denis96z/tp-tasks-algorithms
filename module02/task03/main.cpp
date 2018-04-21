@@ -1,9 +1,18 @@
 #include <iostream>
-#include "binarytree.h"
+#include "heaptree.h"
 
-class IntCmp : public Comparator<int> {
+class IntWithPriorCmp : public PairComparator<int, int> {
 public:
-    int ApplyTo(const int &left, const int &right) const override {
+    int ApplyTo(const std::pair<int, int> &left,
+                const std::pair<int, int> &right) const override {
+        throw NotImplementedException();
+    }
+
+    int ApplyToFirst(const int &left, const int &right) override {
+        return left - right;
+    }
+
+    int ApplyToSecond(const int &left, const int &right) override {
         return left - right;
     }
 };
@@ -16,6 +25,6 @@ public:
 };
 
 int main() {
-    BinaryTree<int, IntCmp, IntTreeTraversal> binTree;
+    HeapTree<int, int, IntWithPriorCmp, IntTreeTraversal> heapTree;
     return 0;
 }

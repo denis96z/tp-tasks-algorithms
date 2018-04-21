@@ -57,7 +57,7 @@ class BinaryTree : public Tree<T, C, TR> {
 
 template<typename T, typename C, typename TR>
 BinaryTree<T, C, TR>::~BinaryTree() noexcept {
-    Clear();
+    BinaryTree<T, C, TR>::Clear();
 }
 
 template<typename T, typename C, typename TR>
@@ -76,6 +76,7 @@ bool BinaryTree<T, C, TR>::TryInsert(const T &item) {
 
     }
     *curPtr = new TreeNode(item);
+    IncNumItems();
     return true;
 }
 
@@ -88,6 +89,7 @@ bool BinaryTree<T, C, TR>::TryDelete(const T &item) {
         int cmp = this->GetComparator().ApplyTo(item, curNode->item);
         if (cmp == 0) {
             DeleteNode(*curPtr);
+            DecNumItems();
             return true;
         }
 
@@ -135,6 +137,7 @@ Tree<T, C, TR> &BinaryTree<T, C, TR>::Clear() {
     while (rootNode) {
         DeleteNode(rootNode);
     }
+    return *this;
 }
 
 template<typename T, typename C, typename TR>
@@ -192,7 +195,7 @@ Tree<T, C, TR> &BinaryTree<T, C, TR>::operator>>(const T &item) {
 }
 
 template<typename T, typename C, typename TR>
-void BinaryTree<T, C, TR>::DeleteNode(BinaryTree::TreeNode *&node) {
+void BinaryTree<T, C, TR>::DeleteNode(TreeNode *&node) {
     if(!node->leftNode) {
         auto rightNode = node->rightNode;
         delete node;
@@ -220,8 +223,8 @@ void BinaryTree<T, C, TR>::DeleteNode(BinaryTree::TreeNode *&node) {
 }
 
 template<typename T, typename C, typename TR>
-void BinaryTree<T, C, TR>::Traverse(const BinaryTree::TreeNode *node,
-                                    BinaryTree::TraversalOrder traverseOrder) const {
+void BinaryTree<T, C, TR>::Traverse(const TreeNode *node,
+                                    TraversalOrder traverseOrder) const {
     enum State {
         START, LEFT, RIGHT, PARENT
     };
