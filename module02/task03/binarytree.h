@@ -56,6 +56,9 @@ class BinaryTree : public Tree<T, C, TR> {
 
         void DeleteNode(TreeNode *&node);
         void Traverse(const TreeNode *node, TraversalOrder traverseOrder) const;
+
+        size_t CountWidth(const TreeNode *node, size_t level) const;
+        size_t CountHeight(const TreeNode *node) const;
 };
 
 template<typename T, typename C, typename TR>
@@ -165,6 +168,25 @@ const T &BinaryTree<T, C, TR>::FindMax() const {
         return curNode->item;
     }
     throw EmptyContainerException();
+}
+
+template<typename T, typename C, typename TR>
+size_t BinaryTree<T, C, TR>::CountMaxWidth() const {
+    size_t maxWidth = 0;
+    size_t h = CountHeight(rootNode);
+    for (size_t i = 1; i < h; ++i)
+    {
+        auto width = CountWidth(rootNode, i);
+        if (width > maxWidth) {
+            maxWidth = width;
+        }
+    }
+    return maxWidth;
+}
+
+template<typename T, typename C, typename TR>
+size_t BinaryTree<T, C, TR>::CountMaxHeight() const {
+    return CountHeight(rootNode);
 }
 
 template<typename T, typename C, typename TR>
@@ -283,6 +305,29 @@ void BinaryTree<T, C, TR>::Traverse(const TreeNode *node,
                 break;
         }
     } while (state != START);
+}
+
+template<typename T, typename C, typename TR>
+size_t BinaryTree<T, C, TR>::CountWidth(const BinaryTree::TreeNode *node,
+                                        size_t level) const {
+    if (!node) {
+        return 0;
+    }
+    if (level == 1) {
+        return 1;
+    }
+    return CountWidth(node->leftNode, level - 1) +
+           CountWidth(node->rightNode, level - 1);
+}
+
+template<typename T, typename C, typename TR>
+size_t BinaryTree<T, C, TR>::CountHeight(const BinaryTree::TreeNode *node) const {
+    if(!node) {
+        return 0;
+    }
+    size_t hLeft = node->leftNode ? CountHeight(node->leftNode) : 0;
+    size_t hRight = node->rightNode ? CountHeight(node->rightNode) : 0;
+    return(std::max(hLeft, hRight) + 1);
 }
 
 #endif //BINTREE_H

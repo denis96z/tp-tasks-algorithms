@@ -29,5 +29,7 @@ int main() {
     for (int i = 0; i < 10; ++i) {
         std::cout << heapTree.TryInsert(std::make_pair(i, rand() % 10)) << " ";
     }
+    std::cout << std::endl << heapTree.CountMaxHeight();
+    std::cout << std::endl << heapTree.CountMaxWidth();
     return 0;
 }

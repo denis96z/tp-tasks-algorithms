@@ -174,12 +174,26 @@ Tree<std::pair<T, P>, C, TR> &HeapTree<T, P, C, TR>::Clear() {
 
 template<typename T, typename P, typename C, typename TR>
 const std::pair<T, P> &HeapTree<T, P, C, TR>::FindMin() const {
-    throw NotImplementedException();
+    if (rootNode) {
+        auto curNode = rootNode;
+        while (curNode->leftNode) {
+            curNode = curNode->leftNode;
+        }
+        return curNode->item;
+    }
+    throw EmptyContainerException();
 }
 
 template<typename T, typename P, typename C, typename TR>
 const std::pair<T, P> &HeapTree<T, P, C, TR>::FindMax() const {
-    throw NotImplementedException();
+    if (rootNode) {
+        auto curNode = rootNode;
+        while (curNode->rightNode) {
+            curNode = curNode->rightNode;
+        }
+        return curNode->item;
+    }
+    throw EmptyContainerException();
 }
 
 template<typename T, typename P, typename C, typename TR>
