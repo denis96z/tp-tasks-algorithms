@@ -73,12 +73,17 @@ class BinaryTree {
             explicit TreeNode(const T &item) : item(item) {}
         };
 
+        enum class TraverseOrder {
+            PRE_ORDER, IN_ORDER, POST_ORDER
+        };
+
         TreeNode *rootNode = nullptr;
 
         C comparator{};
         TR traversal{};
 
         void DeleteNode(TreeNode *&node);
+        void Traverse(const TreeNode *node, TraverseOrder traverseOrder) const;
 };
 
 class EmptyContainerException : public std::exception {
@@ -131,32 +136,7 @@ BinaryTree<T, C, TR> &BinaryTree<T, C, TR>::operator>>(const T &item) {
 
 template<typename T, typename C, typename TR>
 void BinaryTree<T, C, TR>::PostOrderTraversal() {
-    if (!rootNode) {
-        return;
-    }
-
-    std::stack<TreeNode*> stack;
-    stack.push(rootNode);
-
-    bool pushed = true;
-    while (pushed) {
-        auto curNode = stack.top();
-        pushed = false;
-
-        if (curNode->rightNode) {
-            stack.push(curNode->rightNode);
-            pushed = true;
-        }
-        if (curNode->leftNode) {
-            stack.push(curNode->leftNode);
-            pushed = true;
-        }
-    }
-
-    while (!stack.empty()) {
-        traversal.ApplyTo(stack.top()->item);
-        stack.pop();
-    }
+    Traverse(rootNode, TraverseOrder::IN_ORDER);
 }
 
 template<typename T, typename C, typename TR>
@@ -249,6 +229,66 @@ void BinaryTree<T, C, TR>::DeleteNode(BinaryTree::TreeNode *&node) {
          : minParent->rightNode) = min->rightNode;
         delete min;
     }
+}
+
+template<typename T, typename C, typename TR>
+void BinaryTree<T, C, TR>::Traverse(const TreeNode *node,
+                                    BinaryTree::TraverseOrder traverseOrder) const {
+    enum State {
+        START, LEFT, RIGHT, PARENT
+    };
+
+    State state = START;
+    std::stack<const TreeNode*> stack;
+
+    do {
+        switch (state) {
+            case START:
+                state = LEFT;
+                break;
+
+            case LEFT:
+                if (traverseOrder == TraverseOrder::PRE_ORDER) {
+                    traversal.ApplyTo(node->item);
+                }
+                if (node->leftNode) {
+                    stack.push(node);
+                    node = node->leftNode;
+                    state = LEFT;
+                } else {
+                    state = RIGHT;
+                }
+                break;
+
+            case RIGHT:
+                if (traverseOrder == TraverseOrder::POST_ORDER) {
+                    traversal.ApplyTo(node->item);
+                }
+                if (node->rightNode) {
+                    stack.push(node);
+                    node = node->rightNode;
+                    state = LEFT;
+                } else {
+                    state = PARENT;
+                }
+                break;
+
+            case PARENT:
+                if (traverseOrder == TraverseOrder::IN_ORDER) {
+                    traversal.ApplyTo(node->item);
+                }
+                if (stack.empty()) {
+                    state = START;
+                } else if (stack.top()->leftNode == node) {
+                    node = stack.top(); stack.pop();
+                    state = RIGHT;
+                } else if (stack.top()->rightNode == node) {
+                    node = stack.top(); stack.pop();
+                    state = PARENT;
+                }
+                break;
+        }
+    } while (state != START);
 }
 
 #endif //BINARY_TREE_H
