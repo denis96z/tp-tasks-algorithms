@@ -47,8 +47,10 @@ int main() {
             binaryTree << key;
         }
 
-        size_t widthDif = heapTree.CountMaxWidth() -
-                          binaryTree.CountMaxWidth();
+        size_t htWidth = heapTree.CountMaxWidth();
+        size_t btWidth = binaryTree.CountMaxWidth();
+
+        int64_t widthDif = htWidth - btWidth;
         std::cout << widthDif;
     }
     catch (std::bad_alloc&) {
