@@ -27,9 +27,8 @@ class Tree : public Container<T, C> {
 
         ~Tree() noexcept override = default;
 
-    virtual Tree& operator =(const Tree &tree) = delete;
-
-    virtual Tree& operator =(Tree &&tree) noexcept = default;
+        virtual Tree& operator =(const Tree &tree) = delete;
+        virtual Tree& operator =(Tree &&tree) noexcept = default;
 
         virtual bool TryInsert(const T &item) = 0;
         virtual bool TryDelete(const T &item) = 0;
@@ -42,6 +41,7 @@ class Tree : public Container<T, C> {
 
         virtual const T& FindMin() const noexcept(false) = 0;
         virtual const T& FindMax() const noexcept(false) = 0;
+        virtual const T& FindStat(size_t k) const = 0;
 
         virtual size_t CountMaxWidth() const = 0;
         virtual size_t CountMaxHeight() const = 0;
