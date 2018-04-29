@@ -304,6 +304,7 @@ typename AVLTree<T, C, TR>::TreeNode *AVLTree<T, C, TR>::DeleteNode(AVLTree::Tre
                     *node = *tempNode;
                 }
                 delete tempNode;
+                this->DecNumItems();
             }
             else {
                 auto tempNode = node->rightNode;
