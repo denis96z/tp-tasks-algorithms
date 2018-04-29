@@ -136,11 +136,11 @@ const T &AVLTree<T, C, TR>::FindStat(size_t k) const {
     while (index != k) {
         if (k <= index) {
             curNode = curNode->leftNode;
-            index = index - (1 + GetSize(curNode->rightNode));
+            index -= 1 + GetSize(curNode->rightNode);
         }
-        else if (k > index) {
+        if (k > index) {
             curNode = curNode->rightNode;
-            index = index + (1 + GetSize(curNode->leftNode));
+            index += 1 + GetSize(curNode->leftNode);
         }
     }
 
@@ -184,7 +184,7 @@ Tree<T, C, TR> &AVLTree<T, C, TR>::operator<<(const T &item) {
 
 template<typename T, typename C, typename TR>
 Tree<T, C, TR> &AVLTree<T, C, TR>::operator>>(const T &item) {
-    return Insert(item);
+    return Delete(item);
 }
 
 template<typename T, typename C, typename TR>
@@ -283,19 +283,44 @@ typename AVLTree<T, C, TR>::TreeNode *AVLTree<T, C, TR>::DeleteNode(AVLTree::Tre
     if (!node) {
         return nullptr;
     }
+
     auto cmp = this->GetComparator().ApplyTo(item, node->item);
-    if (cmp == 0) {
-        if (!node->leftNode && !node->rightNode) {
-            delete node;
-            return nullptr;
-        }
-        TreeNode *tempNode = node;
-        node = !node->leftNode ? node->rightNode : node->leftNode;
-        delete tempNode;
-        this->DecNumItems();
-        return FixBalance(node);
+    if (cmp < 0) {
+        node->leftNode = DeleteNode(node->leftNode, item);
     }
-    return FixBalance(DeleteNode(cmp > 0 ? node->rightNode : node->leftNode, item));
+    else {
+        if (cmp > 0) {
+            node->rightNode = DeleteNode(node->rightNode, item);
+        }
+        else {
+            if (node->leftNode == nullptr || node->rightNode == nullptr) {
+                auto tempNode = node->leftNode ? node->leftNode : node->rightNode;
+
+                if (tempNode == nullptr) {
+                    tempNode = node;
+                    node = nullptr;
+                }
+                else {
+                    *node = *tempNode;
+                }
+                delete tempNode;
+            }
+            else {
+                auto tempNode = node->rightNode;
+                while (tempNode->leftNode) {
+                    tempNode = tempNode->leftNode;
+                }
+                node->item = tempNode->item;
+                node->rightNode = DeleteNode(node->rightNode, tempNode->item);
+            }
+        }
+    }
+
+    if (node == nullptr) {
+        return node;
+    }
+
+    return FixBalance(node);
 }
 
 template<typename T, typename C, typename TR>
