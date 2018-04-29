@@ -211,7 +211,7 @@ void HashTable<T, C, H>::ResizeBuffer(size_t newSize) {
         }
 
         size_t index = hash.Get(node.second, newSize);
-        assert(index >= 0 && index < buffer.size());
+        assert(index >= 0 && index < newSize);
 
         bool wasPlaced = false;
 
