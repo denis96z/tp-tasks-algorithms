@@ -91,10 +91,11 @@ bool HashTable<T, C, H>::TryAdd(const T &item) {
     size_t index = hash.Get(item, buffer.size());
     assert(index >= 0 && index < buffer.size());
 
+    int64_t delIndex = -1;
+
     for (size_t i = 0; i < buffer.size(); ++i) {
         switch (buffer[index].first) {
             case BufferNodeState::EMPTY:
-            case BufferNodeState::DELETED:
                 buffer[index].first = BufferNodeState::ACTIVE;
                 buffer[index].second = item;
                 ++numItems;
@@ -102,6 +103,11 @@ bool HashTable<T, C, H>::TryAdd(const T &item) {
                     IncBuffer();
                 }
                 return true;
+
+            case BufferNodeState::DELETED:
+                delIndex = index;
+                index = (index + i) % buffer.size();
+                break;
 
             case BufferNodeState::ACTIVE:
                 if (comparator.ApplyTo(buffer[index].second, item) == 0) {
@@ -111,6 +117,17 @@ bool HashTable<T, C, H>::TryAdd(const T &item) {
                 break;
         }
     }
+
+    if (delIndex != -1) {
+        buffer[index].first = BufferNodeState::ACTIVE;
+        buffer[index].second = item;
+        ++numItems;
+        if (ShouldIncBuffer()) {
+            IncBuffer();
+        }
+        return true;
+    }
+
     return false;
 }
 
