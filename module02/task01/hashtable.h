@@ -93,7 +93,7 @@ bool HashTable<T, C, H>::TryAdd(const T &item) {
 
     int64_t delIndex = -1;
 
-    for (size_t i = 0; i < buffer.size(); ++i) {
+    for (size_t i = 1; i <= buffer.size(); ++i) {
         switch (buffer[index].first) {
             case BufferNodeState::EMPTY:
                 buffer[index].first = BufferNodeState::ACTIVE;
@@ -119,8 +119,8 @@ bool HashTable<T, C, H>::TryAdd(const T &item) {
     }
 
     if (delIndex != -1) {
-        buffer[index].first = BufferNodeState::ACTIVE;
-        buffer[index].second = item;
+        buffer[delIndex].first = BufferNodeState::ACTIVE;
+        buffer[delIndex].second = item;
         ++numItems;
         if (ShouldIncBuffer()) {
             IncBuffer();
@@ -135,7 +135,7 @@ template<typename T, typename C, typename H>
 bool HashTable<T, C, H>::TryDelete(const T &item) {
     size_t index = hash.Get(item, buffer.size());
     assert(index >= 0 && index < buffer.size());
-    for (size_t i = 0; i < buffer.size(); ++i) {
+    for (size_t i = 1; i <= buffer.size(); ++i) {
         switch (buffer[index].first) {
             case BufferNodeState::EMPTY:
                 return false;
@@ -165,7 +165,7 @@ bool HashTable<T, C, H>::Has(const T &item) {
     size_t index = hash.Get(item, buffer.size());
     assert(index >= 0 && index < buffer.size());
 
-    for (size_t i = 0; i < buffer.size(); ++i) {
+    for (size_t i = 1; i <= buffer.size(); ++i) {
         switch (buffer[index].first) {
             case BufferNodeState::EMPTY:
                 return false;
@@ -232,7 +232,7 @@ void HashTable<T, C, H>::ResizeBuffer(size_t newSize) {
 
         bool wasPlaced = false;
 
-        for (size_t i = 0; i < newSize && !wasPlaced; ++i) {
+        for (size_t i = 1; i <= newSize && !wasPlaced; ++i) {
             switch (newBuf[index].first) {
                 case BufferNodeState::EMPTY:
                     newBuf[index].first = BufferNodeState::ACTIVE;
