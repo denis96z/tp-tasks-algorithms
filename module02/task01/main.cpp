@@ -1,5 +1,4 @@
 #include <iostream>
-#include <set>
 #include "hashtable.h"
 
 class StrCmp : public Comparator<std::string> {

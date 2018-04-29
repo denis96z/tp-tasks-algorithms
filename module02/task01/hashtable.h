@@ -46,7 +46,7 @@ class HashTable {
 
     private:
         enum class BufferNodeState {
-            EMPTY, ACTIVE, REMOVED
+            EMPTY, ACTIVE, DELETED
         };
 
         static const size_t MIN_BUFFER_SIZE = 8;
@@ -94,9 +94,10 @@ bool HashTable<T, C, H>::TryAdd(const T &item) {
     for (size_t i = 0; i < buffer.size(); ++i) {
         switch (buffer[index].first) {
             case BufferNodeState::EMPTY:
-            case BufferNodeState::REMOVED:
+            case BufferNodeState::DELETED:
                 buffer[index].first = BufferNodeState::ACTIVE;
                 buffer[index].second = item;
+                ++numItems;
                 if (ShouldIncBuffer()) {
                     IncBuffer();
                 }
@@ -110,8 +111,7 @@ bool HashTable<T, C, H>::TryAdd(const T &item) {
                 break;
         }
     }
-
-    assert(false);
+    return false;
 }
 
 template<typename T, typename C, typename H>
@@ -123,7 +123,7 @@ bool HashTable<T, C, H>::TryDelete(const T &item) {
             case BufferNodeState::EMPTY:
                 return false;
 
-            case BufferNodeState::REMOVED:
+            case BufferNodeState::DELETED:
                 index = (index + i) % buffer.size();
                 break;
 
@@ -132,7 +132,8 @@ bool HashTable<T, C, H>::TryDelete(const T &item) {
                     index = (index + i) % buffer.size();
                     continue;
                 }
-                buffer[index].first = BufferNodeState::REMOVED;
+                buffer[index].first = BufferNodeState::DELETED;
+                --numItems;
                 if (ShouldDecBuffer()) {
                     DecBuffer();
                 }
@@ -152,7 +153,7 @@ bool HashTable<T, C, H>::Has(const T &item) {
             case BufferNodeState::EMPTY:
                 return false;
 
-            case BufferNodeState::REMOVED:
+            case BufferNodeState::DELETED:
                 index = (index + i) % buffer.size();
                 break;
 
@@ -209,21 +210,21 @@ void HashTable<T, C, H>::ResizeBuffer(size_t newSize) {
             continue;
         }
 
-        size_t index = hash.Get(node.second, buffer.size());
+        size_t index = hash.Get(node.second, newSize);
         assert(index >= 0 && index < buffer.size());
 
         bool wasPlaced = false;
 
-        for (size_t i = 0; i < buffer.size() && !wasPlaced; ++i) {
-            switch (buffer[index].first) {
+        for (size_t i = 0; i < newSize && !wasPlaced; ++i) {
+            switch (newBuf[index].first) {
                 case BufferNodeState::EMPTY:
-                    buffer[index].first = BufferNodeState::ACTIVE;
-                    buffer[index].second = node.second;
+                    newBuf[index].first = BufferNodeState::ACTIVE;
+                    newBuf[index].second = node.second;
                     wasPlaced = true;
                     break;
 
                 case BufferNodeState::ACTIVE:
-                    index = (index + i) % buffer.size();
+                    index = (index + i) % newSize;
                     break;
             }
         }
