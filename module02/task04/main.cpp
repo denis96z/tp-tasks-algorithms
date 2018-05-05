@@ -37,7 +37,13 @@ int main() {
     }*/
 
     AVLTree<int, IntCmp> tree;
-    tree.Clear();
+    for (int i = 0; i < 10; ++i) {
+        tree.Insert(i);
+    }
+
+    for (int i = 0; i < 10; ++i) {
+        tree.Delete(i);
+    }
 
     return 0;
 }
