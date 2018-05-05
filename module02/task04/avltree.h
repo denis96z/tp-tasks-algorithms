@@ -176,56 +176,13 @@ void AVLTree<T, C>::InsertNode(AVLTree::TreeNode *&p, const T &key, bool &height
     if (cmpResult > 0) {
         InsertNode(p->leftNode, key, heightChanged);
         if (heightChanged) /* Выросла левая ветвь. */ {
-            if (p->balance == 1) {
-                p->balance = 0;
-                heightChanged = false;
-            }
-            else if (p->balance == 0) {
-                p->balance = static_cast<uint8_t>(-1);
-            }
-            else /* Необходимо восстановить баланс. */ {
-                p1 = p->leftNode;
-                if (p1->balance == -1) /* Одиночная LL-ротация. */ {
-                    p->leftNode = p1->rightNode; p1->rightNode = p;
-                    p->balance = 0; p = p1;
-                }
-                else /* Двойная LR-ротация. */ {
-                    p2 = p1->rightNode;
-                    p1->rightNode = p2->leftNode; p2->leftNode = p1;
-                    p->leftNode = p2->rightNode; p2->rightNode = p;
-                    p->balance = static_cast<int8_t>(p2->balance == -1 ? 1 : 0);
-                    p1->balance = static_cast<int8_t>(p2->balance == 1 ? -1 : 0);
-                    p = p2;
-                }
-                p->balance = 0; heightChanged = false;
-            }
+            BalanceR(p, heightChanged);
         }
     }
     else if (cmpResult < 0) {
         InsertNode(p->rightNode, key, heightChanged);
         if (heightChanged) /* Выросла правая ветвь. */ {
-            if (p->balance == -1) {
-                p->balance = 0; heightChanged = false;
-            }
-            else if (p->balance == 0) {
-                p->balance = 1;
-            }
-            else /* Необходимо восстановить баланс. */ {
-                p1 = p->rightNode;
-                if (p1->balance == 1) /* Одиночная RR-ротация. */ {
-                    p->rightNode = p1->leftNode; p1->leftNode = p;
-                    p->balance = 0; p = p1;
-                }
-                else /* Двойная RL-ротация. */ {
-                    p2 = p1->leftNode;
-                    p1->leftNode = p2->rightNode; p2->rightNode = p1;
-                    p->rightNode = p2->leftNode; p2->leftNode = p;
-                    p->balance = static_cast<int8_t>(p2->balance == 1 ? -1 : 0);
-                    p1->balance = static_cast<int8_t>(p2->balance == -1 ? 1 : 0);
-                    p = p2;
-                }
-                p->balance = 0; heightChanged = false;
-            }
+            BalanceL(p, heightChanged);
         }
     }
     else {
