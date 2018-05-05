@@ -9,7 +9,7 @@ public:
 };
 
 int main() {
-    try {
+    /*try {
         size_t n = 0;
         std::cin >> n;
 
@@ -34,6 +34,10 @@ int main() {
     }
     catch (std::bad_alloc&) {
         assert(false);
-    }
+    }*/
+
+    AVLTree<int, IntCmp> tree;
+    tree.Clear();
+
     return 0;
 }

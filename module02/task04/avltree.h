@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <cassert>
+#include <queue>
 
 template <typename T, typename C = Comparator<T>>
 class AVLTree {
@@ -18,11 +19,11 @@ class AVLTree {
         AVLTree<T, C> &operator =(const AVLTree &tree) = delete;
         AVLTree<T, C> &operator =(AVLTree &&tree) noexcept = default;
 
-        AVLTree<T, C>& Insert(const T &item);
-        AVLTree<T, C>& Delete(const T &item);
+        AVLTree<T, C>& Insert(const T &key);
+        AVLTree<T, C>& Delete(const T &key);
         AVLTree<T, C>& Clear();
 
-        bool Has(const T &item) const;
+        bool Has(const T &key) const;
 
         size_t GetSize() const;
         bool IsEmpty() const;
@@ -31,12 +32,12 @@ class AVLTree {
         const T& FindMax() const;
         const T& FindStat(size_t k) const;
 
-        AVLTree<T, C>& operator <<(const T &item);
-        AVLTree<T, C>& operator >>(const T &item);
+        AVLTree<T, C>& operator <<(const T &key);
+        AVLTree<T, C>& operator >>(const T &key);
 
     private:
         struct TreeNode {
-            T item{};
+            T key{};
 
             uint8_t height = 1;
             size_t size = 1;
@@ -44,10 +45,12 @@ class AVLTree {
             TreeNode *leftNode = nullptr;
             TreeNode *rightNode = nullptr;
 
-            explicit TreeNode(const T &item) : item(item) {}
+            explicit TreeNode(const T &key) : key(key) {}
         };
 
         TreeNode *rootNode = nullptr;
+
+        C comparator{};
 
         uint8_t GetHeight(TreeNode *node) const;
         void FixHeight(TreeNode *node);
@@ -61,8 +64,8 @@ class AVLTree {
         TreeNode* RotateLeft(TreeNode *node);
         TreeNode* FixBalance(TreeNode *node);
 
-        TreeNode* InsertNode(TreeNode *node, const T &item);
-        TreeNode* DeleteNode(TreeNode *node, const T &item);
+        TreeNode* InsertNode(TreeNode *node, const T &key);
+        TreeNode* DeleteNode(TreeNode *node, const T &key);
 };
 
 template<typename T, typename C>
@@ -71,22 +74,50 @@ AVLTree<T, C>::~AVLTree() {
 }
 
 template<typename T, typename C>
-AVLTree<T, C> &AVLTree<T, C>::Insert(const T &item) {
-    return <#initializer#>;
+AVLTree<T, C> &AVLTree<T, C>::Insert(const T &key) {
+    throw "Not implemented";
 }
 
 template<typename T, typename C>
-AVLTree<T, C> &AVLTree<T, C>::Delete(const T &item) {
-    return <#initializer#>;
+AVLTree<T, C> &AVLTree<T, C>::Delete(const T &key) {
+    throw "Not implemented";
 }
 
 template<typename T, typename C>
 AVLTree<T, C> &AVLTree<T, C>::Clear() {
-    return <#initializer#>;
+    if (IsEmpty()) {
+        return *this;
+    }
+
+    std::queue<TreeNode*> queue;
+    queue.push(rootNode);
+
+    while (!queue.empty()) {
+        auto curNode = queue.front();
+        if (curNode->leftNode) {
+            queue.push(curNode->leftNode);
+        }
+        if (curNode->rightNode) {
+            queue.push(curNode->rightNode);
+        }
+        delete curNode;
+        queue.pop();
+    }
+
+    return *this;
 }
 
 template<typename T, typename C>
-bool AVLTree<T, C>::Has(const T &item) const {
+bool AVLTree<T, C>::Has(const T &key) const {
+    assert(!IsEmpty());
+    auto curNode = rootNode;
+    while (curNode) {
+        auto cmpResult = comparator.ApplyTo(key, curNode->key);
+        if (cmpResult == 0) {
+            return true;
+        }
+        curNode = cmpResult > 0 ? curNode->rightNode : curNode->leftNode;
+    }
     return false;
 }
 
@@ -97,17 +128,27 @@ size_t AVLTree<T, C>::GetSize() const {
 
 template<typename T, typename C>
 bool AVLTree<T, C>::IsEmpty() const {
-    return GetSize() == 0;
+    return !rootNode;
 }
 
 template<typename T, typename C>
 const T &AVLTree<T, C>::FindMin() const {
     assert(!IsEmpty());
+    auto curNode = rootNode;
+    while (curNode->leftNode) {
+        curNode = curNode->leftNode;
+    }
+    return curNode->key;
 }
 
 template<typename T, typename C>
 const T &AVLTree<T, C>::FindMax() const {
     assert(!IsEmpty());
+    auto curNode = rootNode;
+    while (curNode->rightNode) {
+        curNode = curNode->rightNode;
+    }
+    return curNode->key;
 }
 
 template<typename T, typename C>
@@ -116,13 +157,13 @@ const T &AVLTree<T, C>::FindStat(size_t k) const {
 }
 
 template<typename T, typename C>
-AVLTree<T, C> &AVLTree<T, C>::operator<<(const T &item) {
-    return Insert(item);
+AVLTree<T, C> &AVLTree<T, C>::operator<<(const T &key) {
+    return Insert(key);
 }
 
 template<typename T, typename C>
-AVLTree<T, C> &AVLTree<T, C>::operator>>(const T &item) {
-    return Delete(item);
+AVLTree<T, C> &AVLTree<T, C>::operator>>(const T &key) {
+    return Delete(key);
 }
 
 template<typename T, typename C>
@@ -151,27 +192,27 @@ int16_t AVLTree<T, C>::CountBalanceFactor(AVLTree::TreeNode *node) const {
 }
 
 template<typename T, typename C>
-AVLTree::TreeNode *AVLTree<T, C>::RotateRight(AVLTree::TreeNode *node) {
+typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::RotateRight(AVLTree::TreeNode *node) {
     return nullptr;
 }
 
 template<typename T, typename C>
-AVLTree::TreeNode *AVLTree<T, C>::RotateLeft(AVLTree::TreeNode *node) {
+typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::RotateLeft(AVLTree::TreeNode *node) {
     return nullptr;
 }
 
 template<typename T, typename C>
-AVLTree::TreeNode *AVLTree<T, C>::FixBalance(AVLTree::TreeNode *node) {
+typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::FixBalance(AVLTree::TreeNode *node) {
     return nullptr;
 }
 
 template<typename T, typename C>
-AVLTree::TreeNode *AVLTree<T, C>::InsertNode(AVLTree::TreeNode *node, const T &item) {
+typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::InsertNode(AVLTree::TreeNode *node, const T &key) {
     return nullptr;
 }
 
 template<typename T, typename C>
-AVLTree::TreeNode *AVLTree<T, C>::DeleteNode(AVLTree::TreeNode *node, const T &item) {
+typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::DeleteNode(AVLTree::TreeNode *node, const T &key) {
     return nullptr;
 }
 
