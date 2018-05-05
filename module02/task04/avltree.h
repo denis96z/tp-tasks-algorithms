@@ -5,7 +5,6 @@
 
 #include <cstdint>
 #include <cassert>
-#include <queue>
 
 template <typename T, typename C = Comparator<T>>
 class AVLTree {
@@ -149,7 +148,7 @@ const T &AVLTree<T, C>::FindMax() const {
 
 template<typename T, typename C>
 const T &AVLTree<T, C>::FindStat(size_t k) const {
-    assert(k > 0 && k < GetSize());
+    assert(k >= 0 && k < GetSize());
 
     auto curNode = rootNode;
     auto index = GetSize(rootNode->leftTree);
