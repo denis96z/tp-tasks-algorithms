@@ -16,17 +16,6 @@ class Comparator {
         Comparator& operator =(const Comparator &comparator) = default;
         Comparator& operator =(Comparator &&comparator) noexcept = default;
 
-        /**
-         * Сравнивает два элемента.
-         * @param left
-         * Первый элемент.
-         * @param right
-         * Второй элемент.
-         * @return
-         * 0, если элементы совпадают.
-         * Положительное число, если первый элемент больше второго.
-         * Отрицательное число, если первый элемент меньше второго.
-         */
         virtual int ApplyTo(const T &left, const T &right) const = 0;
 };
 
