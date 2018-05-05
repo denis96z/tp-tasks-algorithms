@@ -42,8 +42,8 @@ class AVLTree {
             uint8_t height = 1;
             size_t size = 1;
 
-            TreeNode *leftNode = nullptr;
-            TreeNode *rightNode = nullptr;
+            TreeNode *leftTree = nullptr;
+            TreeNode *rightTree = nullptr;
 
             explicit TreeNode(const T &key) : key(key) {}
         };
@@ -66,6 +66,9 @@ class AVLTree {
 
         TreeNode* InsertNode(TreeNode *p, const T &key);
         TreeNode* DeleteNode(TreeNode *p, const T &key);
+
+        TreeNode* FindMinNode(TreeNode *p);
+        TreeNode* DeleteMinNode(TreeNode *p);
 };
 
 template<typename T, typename C>
@@ -75,35 +78,21 @@ AVLTree<T, C>::~AVLTree() {
 
 template<typename T, typename C>
 AVLTree<T, C> &AVLTree<T, C>::Insert(const T &key) {
-    throw "Not implemented";
+    rootNode = InsertNode(rootNode, key);
+    return *this;
 }
 
 template<typename T, typename C>
 AVLTree<T, C> &AVLTree<T, C>::Delete(const T &key) {
-    throw "Not implemented";
+    rootNode = DeleteNode(rootNode, key);
+    return *this;
 }
 
 template<typename T, typename C>
 AVLTree<T, C> &AVLTree<T, C>::Clear() {
-    if (IsEmpty()) {
-        return *this;
+    while (rootNode) {
+        rootNode = DeleteNode(rootNode, rootNode->key);
     }
-
-    std::queue<TreeNode*> queue;
-    queue.push(rootNode);
-
-    while (!queue.empty()) {
-        auto curNode = queue.front();
-        if (curNode->leftNode) {
-            queue.push(curNode->leftNode);
-        }
-        if (curNode->rightNode) {
-            queue.push(curNode->rightNode);
-        }
-        delete curNode;
-        queue.pop();
-    }
-
     return *this;
 }
 
@@ -116,7 +105,7 @@ bool AVLTree<T, C>::Has(const T &key) const {
         if (cmpResult == 0) {
             return true;
         }
-        curNode = cmpResult > 0 ? curNode->rightNode : curNode->leftNode;
+        curNode = cmpResult > 0 ? curNode->rightTree : curNode->leftTree;
     }
     return false;
 }
@@ -135,8 +124,8 @@ template<typename T, typename C>
 const T &AVLTree<T, C>::FindMin() const {
     assert(!IsEmpty());
     auto curNode = rootNode;
-    while (curNode->leftNode) {
-        curNode = curNode->leftNode;
+    while (curNode->leftTree) {
+        curNode = curNode->leftTree;
     }
     return curNode->key;
 }
@@ -145,8 +134,8 @@ template<typename T, typename C>
 const T &AVLTree<T, C>::FindMax() const {
     assert(!IsEmpty());
     auto curNode = rootNode;
-    while (curNode->rightNode) {
-        curNode = curNode->rightNode;
+    while (curNode->rightTree) {
+        curNode = curNode->rightTree;
     }
     return curNode->key;
 }
@@ -173,8 +162,8 @@ uint8_t AVLTree<T, C>::GetHeight(AVLTree::TreeNode *node) const {
 
 template<typename T, typename C>
 void AVLTree<T, C>::FixHeight(AVLTree::TreeNode *node) {
-    auto hLeft = GetHeight(node->leftNode);
-    auto hRight = GetHeight(node->rightNode);
+    auto hLeft = GetHeight(node->leftTree);
+    auto hRight = GetHeight(node->rightTree);
     node->height = (hLeft > hRight ? hLeft : hRight) + static_cast<uint8_t>(1);
 }
 
@@ -190,15 +179,15 @@ void AVLTree<T, C>::FixSize(AVLTree::TreeNode *node) {
 
 template<typename T, typename C>
 int16_t AVLTree<T, C>::CountBalanceFactor(AVLTree::TreeNode *node) const {
-    return static_cast<int16_t>(GetHeight(node->rightNode)) -
-            static_cast<int16_t>(GetHeight(node->leftNode));
+    return static_cast<int16_t>(GetHeight(node->rightTree)) -
+            static_cast<int16_t>(GetHeight(node->leftTree));
 }
 
 template<typename T, typename C>
 typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::RotateRight(AVLTree::TreeNode *p) {
-    TreeNode *q = p->leftNode;
-    p->leftNode = q->rightNode;
-    q->rightNode = p;
+    TreeNode *q = p->leftTree;
+    p->leftTree = q->rightTree;
+    q->rightTree = p;
     FixHeight(p);
     FixHeight(q);
     return q;
@@ -206,9 +195,9 @@ typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::RotateRight(AVLTree::TreeNode *
 
 template<typename T, typename C>
 typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::RotateLeft(AVLTree::TreeNode *q) {
-    TreeNode* p = q->rightNode;
-    q->rightNode = p->leftNode;
-    p->leftNode = q;
+    TreeNode* p = q->rightTree;
+    q->rightTree = p->leftTree;
+    p->leftTree = q;
     FixHeight(q);
     FixHeight(p);
     return p;
@@ -219,15 +208,15 @@ typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::FixBalance(AVLTree::TreeNode *p
     FixHeight(p);
     if (CountBalanceFactor(p) == 2)
     {
-        if (CountBalanceFactor(p->rightNode) < 0) {
-            p->rightNode = RotateRight(p->rightNode);
+        if (CountBalanceFactor(p->rightTree) < 0) {
+            p->rightTree = RotateRight(p->rightTree);
         }
         return RotateLeft(p);
     }
     if (CountBalanceFactor(p) == -2)
     {
-        if (CountBalanceFactor(p->leftNode) > 0) {
-            p->leftNode = RotateLeft(p->leftNode);
+        if (CountBalanceFactor(p->leftTree) > 0) {
+            p->leftTree = RotateLeft(p->leftTree);
         }
         return RotateRight(p);
     }
@@ -240,17 +229,53 @@ typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::InsertNode(AVLTree::TreeNode *p
         return new TreeNode(key);
     }
     if (comparator.ApplyTo(key, p->key) < 0) {
-        p->leftNode = InsertNode(p->leftNode, key);
+        p->leftTree = InsertNode(p->leftTree, key);
     }
     else {
-        p->rightNode = InsertNode(p->rightNode, key);
+        p->rightTree = InsertNode(p->rightTree, key);
     }
     return FixBalance(p);
 }
 
 template<typename T, typename C>
 typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::DeleteNode(AVLTree::TreeNode *p, const T &key) {
-    return nullptr;
+    if (!p) {
+        return nullptr;
+    }
+    auto cmpResult = comparator.ApplyTo(key, p->key);
+    if (cmpResult < 0) {
+        p->leftTree = DeleteNode(p->leftTree, key);
+    }
+    else if (cmpResult > 0) {
+        p->rightTree = DeleteNode(p->rightTree, key);
+    }
+    else {
+        TreeNode* q = p->leftTree;
+        TreeNode* r = p->rightTree;
+        delete p;
+        if (!r) {
+            return q;
+        }
+        TreeNode* min = FindMinNode(r);
+        min->rightTree = DeleteMinNode(r);
+        min->leftTree = q;
+        return FixBalance(min);
+    }
+    return FixBalance(p);
+}
+
+template<typename T, typename C>
+typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::FindMinNode(AVLTree::TreeNode *p) {
+    return p->leftTree ? FindMinNode(p->leftTree) : p;
+}
+
+template<typename T, typename C>
+typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::DeleteMinNode(AVLTree::TreeNode *p) {
+    if (!p->leftTree) {
+        return p->rightTree;
+    }
+    p->leftTree = DeleteMinNode(p->leftTree);
+    return FixBalance(p);
 }
 
 
