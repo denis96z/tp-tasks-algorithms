@@ -8,19 +8,12 @@ public:
     }
 };
 
-class IntTreeTraversal : public TreeTraversal<int> {
-public:
-    void ApplyTo(const int &item) const override {
-        std::cout << item << " ";
-    }
-};
-
 int main() {
     try {
         size_t n = 0;
         std::cin >> n;
 
-        AVLTree<int, IntCmp, IntTreeTraversal> avlTree;
+        AVLTree<int, IntCmp> avlTree;
 
         int key = 0;
         size_t k = 0;
