@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <vector>
+#include <algorithm>
 
 #include "types.h"
 #include "huffman.h"
@@ -15,6 +16,8 @@ void Encode(IInputStream &original, IOutputStream &compressed) {
     auto bytes = read_bytes(original);
     auto frequencies = count_frequencies(bytes);
     auto tree = build_tree(frequencies);
+
+
 }
 
 void Decode(IInputStream &compressed, IOutputStream &original) {
@@ -45,7 +48,9 @@ std::vector<size_t> count_frequencies(const std::vector<byte> &bytes) {
 }
 
 HuffmanTree build_tree(const std::vector<size_t> &frequencies) {
-    std::vector<std::unique_ptr<HuffmanTreeNode>> nodes;
+    typedef std::unique_ptr<HuffmanTreeNode> node_ptr_t;
+
+    std::vector<node_ptr_t> nodes;
     for (size_t i = 0; i < frequencies.size(); ++i) {
         size_t f = frequencies[i];
         if (f > 0) {
@@ -56,14 +61,18 @@ HuffmanTree build_tree(const std::vector<size_t> &frequencies) {
     }
 
     while (nodes.size() > 1) {
-        //SORT nodes
+        std::sort(nodes.begin(), nodes.end(),
+                  [](const node_ptr_t &a, const node_ptr_t &b) {
+            return a->frequency < b->frequency;
+        });
+
         auto minSum = nodes[0]->frequency + nodes[1]->frequency;
         auto newNode = std::make_unique<HuffmanTreeNode>(minSum);
 
         newNode->leftNode = std::move(nodes[0]);
         newNode->rightNode = std::move(nodes[1]);
 
-        //REMOVE_AT_0
+        nodes.erase(nodes.begin());
         nodes[0] = std::move(newNode);
     }
 
