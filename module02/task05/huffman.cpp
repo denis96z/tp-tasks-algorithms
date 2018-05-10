@@ -56,7 +56,7 @@ HuffmanTree build_tree(const std::vector<size_t> &frequencies) {
         if (f > 0) {
             auto newNode = std::make_unique<HuffmanTreeNode>(f,
                     std::make_unique<byte>(i));
-            nodes.push_back(newNode);
+            nodes.push_back(std::move(newNode));
         }
     }
 

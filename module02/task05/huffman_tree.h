@@ -11,7 +11,7 @@ struct HuffmanTreeNode {
     std::unique_ptr<HuffmanTreeNode> leftNode = nullptr;
     std::unique_ptr<HuffmanTreeNode> rightNode = nullptr;
 
-    explicit HuffmanTreeNode(size_t freq, std::unique_ptr<byte> &&b) noexcept :
+    explicit HuffmanTreeNode(size_t freq, std::unique_ptr<byte> &&b = nullptr) noexcept :
             frequency(freq), dataByte(std::move(b)) {}
 };
 
