@@ -59,7 +59,7 @@ void BitCode::Load(IInputStream &stream) {
     byte curByte = 0;
 
     assert(stream.Read(curByte) && curByte > 0);
-    dataBits = std::move(std::vector(static_cast<size_t>(curByte, 0)));
+    dataBits = std::move(std::vector<bool>(static_cast<size_t>(curByte), false));
 
     for (size_t i = 0, index = 0; i < dataBits.size(); ++i) {
         if (index == 0) {
@@ -89,14 +89,14 @@ class BitCodesTable {
         BitCodesTable& operator =(const BitCodesTable &table) = delete;
         BitCodesTable& operator =(BitCodesTable &&table) noexcept = default;
 
-        void Add(byte b, BitCode &&bitCode) noexcept;
+        void Add(byte b, BitCode &&bitCode);
         bool GetCode(BitCode &bitCode, byte b) const;
 
         void Save(IOutputStream &stream);
         void Load(IInputStream &stream);
 
     private:
-        std::vector<std::unique_ptr<BitCode>> bitCodes;
+        std::vector<std::shared_ptr<BitCode>> bitCodes;
         byte numCodes = 0;
 };
 
@@ -105,7 +105,7 @@ BitCodesTable::BitCodesTable() : bitCodes(NUM_BYTES, nullptr) {}
 void BitCodesTable::Add(byte b, BitCode &&bitCode) {
     assert(b >= 0 && b < NUM_BYTES);
     assert(bitCodes[b] == nullptr);
-    bitCodes[b] = std::make_unique<BitCode>(std::move(bitCode));
+    bitCodes[b] = std::make_shared<BitCode>(std::move(bitCode));
     ++numCodes;
 }
 
@@ -138,7 +138,7 @@ void BitCodesTable::Load(IInputStream &stream) {
     assert(stream.Read(curByte) && curByte > 0);
     numCodes = curByte;
 
-    bitCodes = std::move(std::vector<std::unique_ptr<BitCode>>(NUM_BYTES, nullptr));
+    bitCodes = std::move(std::vector<std::shared_ptr<BitCode>>(NUM_BYTES, nullptr));
     for (byte counter = 0; counter < numCodes; ++counter) {
         assert(stream.Read(curByte) && curByte > 0);
         bitCodes[curByte]->Load(stream);

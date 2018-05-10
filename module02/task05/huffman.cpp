@@ -5,17 +5,21 @@
 #include "types.h"
 #include "huffman.h"
 #include "huffman_tree.h"
+#include "bitcode.h"
 
 std::vector<byte> read_bytes(IInputStream &stream);
 void write_bytes(IOutputStream &stream, const std::vector<byte> &bytes);
 
 std::vector<size_t> count_frequencies(const std::vector<byte> &bytes);
 HuffmanTree build_tree(const std::vector<size_t> &frequencies);
+BitCodesTable create_table(const HuffmanTree &tree);
 
 void Encode(IInputStream &original, IOutputStream &compressed) {
-    auto bytes = read_bytes(original);
-    auto frequencies = count_frequencies(bytes);
-    auto tree = build_tree(frequencies);
+    auto bytes = std::move(read_bytes(original));
+    auto frequencies = std::move(count_frequencies(bytes));
+    auto tree = std::move(build_tree(frequencies));
+    auto table = std::move(create_table(tree));
+
 
 
 }
@@ -77,4 +81,33 @@ HuffmanTree build_tree(const std::vector<size_t> &frequencies) {
     }
 
     return HuffmanTree(std::move(nodes[0]));
+}
+
+BitCodesTable create_table(const HuffmanTree &tree) {
+    BitCodesTable table;
+
+    std::vector<bool> bits;
+    tree.Traverse([&](HuffmanTree::TraverseAction action,
+                      const std::unique_ptr<byte> &dataByte) {
+        switch (action) {
+            case HuffmanTree::TraverseAction::TURN_LEFT:
+                bits.push_back(true);
+                break;
+
+            case HuffmanTree::TraverseAction::TURN_RIGHT:
+                bits.push_back(false);
+                break;
+
+            case HuffmanTree::TraverseAction::TURN_BACK:
+                if (dataByte != nullptr) {
+                    table.Add(*dataByte, BitCode(bits));
+                }
+                if (!bits.empty()) {
+                    bits.pop_back();
+                }
+                break;
+        }
+    });
+
+    return table;
 }
