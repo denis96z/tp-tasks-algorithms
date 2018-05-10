@@ -14,14 +14,26 @@ std::vector<size_t> count_frequencies(const std::vector<byte> &bytes);
 HuffmanTree build_tree(const std::vector<size_t> &frequencies);
 BitCodesTable create_table(const HuffmanTree &tree);
 
+std::vector<byte> encode_data(const std::vector<byte> &originalBytes,
+                              const BitCodesTable &table);
+std::vector<byte> encode_size(size_t size);
+
 void Encode(IInputStream &original, IOutputStream &compressed) {
     auto bytes = std::move(read_bytes(original));
     auto frequencies = std::move(count_frequencies(bytes));
     auto tree = std::move(build_tree(frequencies));
     auto table = std::move(create_table(tree));
 
+    table.Save(compressed);
 
+    auto encoded = std::move(encode_data(bytes, table));
+    for (auto b : encode_size(encoded.size())) {
+        compressed.Write(b);
+    }
 
+    for (auto b : encoded) {
+        compressed.Write(b);
+    }
 }
 
 void Decode(IInputStream &compressed, IOutputStream &original) {
@@ -110,4 +122,46 @@ BitCodesTable create_table(const HuffmanTree &tree) {
     });
 
     return table;
+}
+
+std::vector<byte> encode_data(const std::vector<byte> &originalBytes,
+                              const BitCodesTable &table) {
+    std::vector<byte> encodedBytes;
+
+    byte curByte = 0;
+    size_t curIndex = 0;
+
+    for (byte b : originalBytes) {
+        const auto &bits = table.GetCode(b).GetBits();
+        for (bool bt : bits) {
+            curByte |= static_cast<byte>(bt ? 1 : 0) << curIndex;
+
+            if (curIndex == NUM_BYTES - 1) {
+                encodedBytes.push_back(curByte);
+                curIndex = 0;
+            }
+            else {
+                ++curIndex;
+            }
+        }
+    }
+
+    if (curIndex > 0) {
+        encodedBytes.push_back(curByte);
+    }
+
+    return encodedBytes;
+}
+
+byte get_size_byte(size_t size, size_t index) {
+    return static_cast<byte>((size >> index) & static_cast<size_t>(255));
+}
+
+std::vector<byte> encode_size(size_t size) {
+    std::vector<byte> encodedSize;
+    encodedSize.push_back(get_size_byte(size, 0));
+    encodedSize.push_back(get_size_byte(size, 1));
+    encodedSize.push_back(get_size_byte(size, 2));
+    encodedSize.push_back(get_size_byte(size, 3));
+    return encodedSize;
 }

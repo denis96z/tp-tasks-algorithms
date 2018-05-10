@@ -41,17 +41,23 @@ void BitCode::Save(IOutputStream &stream) {
     stream.Write(static_cast<byte>(dataBits.size()));
 
     byte curByte = 0;
-    for (size_t i = 0, index = 0; i < dataBits.size(); ++i) {
-        auto curBit = static_cast<byte>(dataBits[i] ? 1 : 0);
-        curByte |= curBit << index;
+    size_t curIndex = 0;
 
-        if (index == (NUM_BITS_IN_BYTE - 1)) {
+    for (auto &&dataBit : dataBits) {
+        auto curBit = static_cast<byte>(dataBit ? 1 : 0);
+        curByte |= curBit << curIndex;
+
+        if (curIndex == (NUM_BITS_IN_BYTE - 1)) {
             stream.Write(curByte);
-            index = 0;
+            curIndex = 0;
         }
         else {
-            ++index;
+            ++curIndex;
         }
+    }
+
+    if (curIndex > 0) {
+        stream.Write(curByte);
     }
 }
 
@@ -90,6 +96,8 @@ class BitCodesTable {
         BitCodesTable& operator =(BitCodesTable &&table) noexcept = default;
 
         void Add(byte b, BitCode &&bitCode);
+
+        const BitCode& GetCode(byte b) const;
         bool GetCode(BitCode &bitCode, byte b) const;
 
         void Save(IOutputStream &stream);
@@ -111,13 +119,17 @@ void BitCodesTable::Add(byte b, BitCode &&bitCode) {
 
 bool BitCodesTable::GetCode(BitCode &bitCode, byte b) const {
     assert(b >= 0 && b < NUM_BYTES);
-    bool result = false;
-
     if (bitCodes[b] != nullptr) {
         bitCode = *(bitCodes[b]);
+        return true;
     }
+    return false;
+}
 
-    return result;
+const BitCode &BitCodesTable::GetCode(byte b) const {
+    assert(b >= 0 && b < NUM_BYTES);
+    assert(bitCodes[b] != nullptr);
+    return *(bitCodes[b]);
 }
 
 void BitCodesTable::Save(IOutputStream &stream) {
