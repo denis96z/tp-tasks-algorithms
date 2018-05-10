@@ -5,7 +5,9 @@
 #include "huffman.h"
 #include "huffman_tree.h"
 
-std::vector<byte> read_bytes(IInputStream &original);
+std::vector<byte> read_bytes(IInputStream &stream);
+void write_bytes(IOutputStream &stream, const std::vector<byte> &bytes);
+
 std::vector<size_t> count_frequencies(const std::vector<byte> &bytes);
 HuffmanTree build_tree(const std::vector<size_t> &frequencies);
 
@@ -19,13 +21,19 @@ void Decode(IInputStream &compressed, IOutputStream &original) {
 
 }
 
-std::vector<byte> read_bytes(IInputStream &original) {
+std::vector<byte> read_bytes(IInputStream &stream) {
     std::vector<byte> bytes;
     byte b = 0;
-    while (original.Read(b)) {
+    while (stream.Read(b)) {
         bytes.push_back(b);
     }
     return bytes;
+}
+
+void write_bytes(IOutputStream &stream, const std::vector<byte> &bytes) {
+    for (auto b : bytes) {
+        stream.Write(b);
+    }
 }
 
 std::vector<size_t> count_frequencies(const std::vector<byte> &bytes) {
