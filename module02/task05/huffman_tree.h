@@ -34,7 +34,7 @@ class HuffmanTree {
         HuffmanTree& operator =(HuffmanTree &&tree) noexcept = default;
 
         enum class TraverseAction {
-            TURN_LEFT, TURN_RIGHT, TURN_BACK
+            TURN_LEFT, TURN_RIGHT, TURN_BACK, STOP
         };
 
         using traverse_function_t = std::function<void(TraverseAction action,
@@ -60,7 +60,7 @@ void HuffmanTree::Traverse(const HuffmanTree::node_ptr_t &curNode,
                            const HuffmanTree::traverse_function_t &tFunc) const {
     if (curNode->leftNode == nullptr && curNode->rightNode == nullptr) {
         assert(curNode->dataByte != nullptr);
-        tFunc(TraverseAction::TURN_BACK, curNode->dataByte);
+        tFunc(TraverseAction::STOP, curNode->dataByte);
     }
 
     if (curNode->leftNode != nullptr) {

@@ -117,17 +117,18 @@ BitCodesTable create_table(const HuffmanTree &tree) {
                       const std::unique_ptr<byte> &dataByte) {
         switch (action) {
             case HuffmanTree::TraverseAction::TURN_LEFT:
-                bits.push_back(true);
-                break;
-
-            case HuffmanTree::TraverseAction::TURN_RIGHT:
                 bits.push_back(false);
                 break;
 
+            case HuffmanTree::TraverseAction::TURN_RIGHT:
+                bits.push_back(true);
+                break;
+
+            case HuffmanTree::TraverseAction::STOP:
+                table.Add(*dataByte, BitCode(bits));
+                break;
+
             case HuffmanTree::TraverseAction::TURN_BACK:
-                if (dataByte != nullptr) {
-                    table.Add(*dataByte, BitCode(bits));
-                }
                 if (!bits.empty()) {
                     bits.pop_back();
                 }

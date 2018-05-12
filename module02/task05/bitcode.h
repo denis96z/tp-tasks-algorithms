@@ -11,7 +11,7 @@
 class BitCode {
     public:
         BitCode() = delete;
-        explicit BitCode(std::vector<bool> bits);
+        explicit BitCode(const std::vector<bool> &bits);
         BitCode(const BitCode &bitCode) = default;
         BitCode(BitCode &&bitCode) noexcept = default;
 
@@ -35,8 +35,7 @@ class BitCode {
         std::vector<bool> dataBits{};
 };
 
-BitCode::BitCode(std::vector<bool> bits) :
-        dataBits(std::move(bits)) {}
+BitCode::BitCode(const std::vector<bool> &bits) : dataBits(bits) {}
 
 const std::vector<bool> &BitCode::GetBits() const {
     return dataBits;

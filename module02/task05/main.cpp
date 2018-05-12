@@ -16,8 +16,8 @@ class Output : public IOutputStream {
 class OriginalInput : public IInputStream {
     public:
         bool Read(byte &value) override {
-            if (i++ < 1000) {
-                value = static_cast<unsigned char &&>(rand() % 255);
+            if (i++ < 5) {
+                value = static_cast<unsigned char &&>((rand() % 10) + 'A');
                 return true;
             }
             return false;
