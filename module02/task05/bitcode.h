@@ -25,6 +25,12 @@ class BitCode {
         void Save(IOutputStream &stream);
         void Load(IInputStream &stream);
 
+        bool operator ==(const BitCode &bitCode) const;
+        bool operator !=(const BitCode &bitCode) const;
+
+        bool operator ==(const std::vector<bool> &bitCode) const;
+        bool operator !=(const std::vector<bool> &bitCode) const;
+
     private:
         std::vector<bool> dataBits{};
 };
@@ -84,6 +90,32 @@ void BitCode::Load(IInputStream &stream) {
     }
 }
 
+bool BitCode::operator==(const BitCode &bitCode) const {
+    return *this == bitCode.dataBits;
+}
+
+bool BitCode::operator!=(const BitCode &bitCode) const {
+    return !(*this == bitCode);
+}
+
+bool BitCode::operator==(const std::vector<bool> &bitCode) const {
+    if (dataBits.size() != bitCode.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < dataBits.size(); ++i) {
+        if (dataBits[i] != bitCode[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool BitCode::operator!=(const std::vector<bool> &bitCode) const {
+    return !(*this == bitCode);
+}
+
 class BitCodesTable {
     public:
         BitCodesTable();
@@ -98,6 +130,8 @@ class BitCodesTable {
         void Add(byte b, BitCode &&bitCode);
 
         const BitCode& GetCode(byte b) const;
+
+        bool HasCode(byte b) const;
         bool GetCode(BitCode &bitCode, byte b) const;
 
         void Save(IOutputStream &stream);
@@ -124,6 +158,11 @@ bool BitCodesTable::GetCode(BitCode &bitCode, byte b) const {
         return true;
     }
     return false;
+}
+
+bool BitCodesTable::HasCode(byte b) const {
+    assert(b >= 0 && b < NUM_BYTES);
+    return bitCodes[b] != nullptr;
 }
 
 const BitCode &BitCodesTable::GetCode(byte b) const {

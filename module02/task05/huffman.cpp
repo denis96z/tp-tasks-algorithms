@@ -16,7 +16,11 @@ BitCodesTable create_table(const HuffmanTree &tree);
 
 std::vector<byte> encode_data(const std::vector<byte> &originalBytes,
                               const BitCodesTable &table);
+std::vector<byte> decode_data(IInputStream &stream, size_t dataSize,
+                              const BitCodesTable &table);
+
 std::vector<byte> encode_size(size_t size);
+size_t decode_size(const std::vector<byte> &bytes);
 
 void Encode(IInputStream &original, IOutputStream &compressed) {
     auto bytes = std::move(read_bytes(original));
@@ -37,7 +41,17 @@ void Encode(IInputStream &original, IOutputStream &compressed) {
 }
 
 void Decode(IInputStream &compressed, IOutputStream &original) {
+    BitCodesTable table;
+    table.Load(compressed);
 
+    std::vector<byte> sizeBytes(4, 0);
+    for (byte i = 0; i < 4; ++i) {
+        assert(compressed.Read(sizeBytes[i]));
+    }
+    size_t size = decode_size(sizeBytes);
+
+    auto origBytes = std::move(decode_data(compressed, size, table));
+    write_bytes(original, origBytes);
 }
 
 std::vector<byte> read_bytes(IInputStream &stream) {
@@ -153,6 +167,33 @@ std::vector<byte> encode_data(const std::vector<byte> &originalBytes,
     return encodedBytes;
 }
 
+std::vector<byte> decode_data(IInputStream &stream, size_t dataSize,
+                              const BitCodesTable &table) {
+    std::vector<byte> result(dataSize);
+    size_t resultIndex = 0;
+
+    byte curByte = 0;
+    std::vector<bool> bitCode;
+
+    while (stream.Read(curByte)) {
+        for (size_t curIndex = 0; curIndex < NUM_BITS_IN_BYTE; ++curIndex) {
+            auto curBit = (curByte & static_cast<byte>(1)) != 0;
+            bitCode.push_back(curBit);
+
+            for (byte b = 0; b < NUM_BYTES; ++b) {
+                if (table.HasCode(b) && (table.GetCode(b) == bitCode)) {
+                    result[resultIndex++] = b;
+                    if (resultIndex == dataSize) return result;
+                    bitCode.clear();
+                    break;
+                }
+            }
+        }
+    }
+
+    assert(false);
+}
+
 byte get_size_byte(size_t size, size_t index) {
     return static_cast<byte>((size >> index) & static_cast<size_t>(255));
 }
@@ -164,4 +205,12 @@ std::vector<byte> encode_size(size_t size) {
     encodedSize.push_back(get_size_byte(size, 2));
     encodedSize.push_back(get_size_byte(size, 3));
     return encodedSize;
+}
+
+size_t decode_size(const std::vector<byte> &bytes) {
+    size_t size = 0;
+    for (byte i = 0; i < 4; ++i) {
+        size |= static_cast<size_t>(bytes[i]) << i;
+    }
+    return size;
 }
