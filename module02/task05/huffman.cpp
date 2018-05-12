@@ -148,13 +148,12 @@ std::vector<byte> encode_data(const std::vector<byte> &originalBytes,
 
     for (byte b : originalBytes) {
         const auto &bits = table.GetCode(b).GetBits();
-        for (auto i = bits.rbegin(); i != bits.rend(); ++i) {
-            const auto &bt = *i;
+        for (auto bt : bits) {
             curByte |= static_cast<byte>(bt ? 1 : 0) << curIndex;
 
-            if (curIndex == NUM_BYTES - 1) {
+            if (curIndex == NUM_BITS_IN_BYTE - 1) {
                 encodedBytes.push_back(curByte);
-                curIndex = 0;
+                curByte = 0; curIndex = 0;
             }
             else {
                 ++curIndex;
@@ -178,13 +177,14 @@ std::vector<byte> decode_data(IInputStream &stream, size_t dataSize,
     std::vector<bool> bitCode;
 
     while (stream.Read(curByte)) {
-        for (size_t curIndex = 0; curIndex < NUM_BITS_IN_BYTE; ++curIndex) {
-            auto curBit = (curByte & static_cast<byte>(1)) != 0;
+        for (byte curIndex = 0; curIndex < NUM_BITS_IN_BYTE; ++curIndex) {
+            auto curBit = (curByte & static_cast<byte>(static_cast<byte>(1) << curIndex)) != 0;
             bitCode.push_back(curBit);
 
-            for (byte b = 0; b < NUM_BYTES; ++b) {
-                if (table.HasCode(b) && (table.GetCode(b) == bitCode)) {
-                    result[resultIndex++] = b;
+            for (size_t b = 0; b < NUM_BYTES; ++b) {
+                auto bt = static_cast<byte>(b);
+                if (table.HasCode(bt) && (table.GetCode(bt) == bitCode)) {
+                    result[resultIndex++] = bt;
                     if (resultIndex == dataSize) return result;
                     bitCode.clear();
                     break;
