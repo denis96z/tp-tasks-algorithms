@@ -54,7 +54,7 @@ void BitCode::Save(IOutputStream &stream) {
 
         if (curIndex == (NUM_BITS_IN_BYTE - 1)) {
             stream.Write(curByte);
-            curIndex = 0;
+            curByte = 0; curIndex = 0;
         }
         else {
             ++curIndex;

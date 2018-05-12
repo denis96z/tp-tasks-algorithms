@@ -1,6 +1,7 @@
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <cassert>
 
 #include "huffman.h"
 
@@ -15,16 +16,23 @@ class Output : public IOutputStream {
 
 class OriginalInput : public IInputStream {
     public:
+        OriginalInput() {
+            for (size_t i = 0; i < 10000; ++i) {
+                data.push_back(rand() % 255);
+            }
+        }
+
         bool Read(byte &value) override {
-            if (i++ < 5) {
-                value = static_cast<unsigned char &&>((rand() % 10) + 'A');
+            static size_t i = 0;
+            if (i < data.size()) {
+                value = data[i++];
                 return true;
             }
             return false;
         }
 
-    private:
-        size_t i = 0;
+    public:
+        std::vector<byte> data;
 };
 
 class CompressedInput : public IInputStream {
@@ -40,7 +48,7 @@ class CompressedInput : public IInputStream {
             return false;
         }
 
-    private:
+    public:
         size_t index = 0;
         std::vector<byte> bytes;
 };
@@ -56,5 +64,6 @@ int main() {
 
     Decode(compInput, origOutput);
 
+    assert(origInput.data == origOutput.dataVector);
     return 0;
 }

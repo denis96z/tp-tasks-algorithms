@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 #include "types.h"
 #include "huffman.h"
@@ -196,23 +197,19 @@ std::vector<byte> decode_data(IInputStream &stream, size_t dataSize,
     assert(false);
 }
 
-byte get_size_byte(size_t size, size_t index) {
-    return static_cast<byte>((size >> index) & static_cast<size_t>(255));
-}
-
 std::vector<byte> encode_size(size_t size) {
-    std::vector<byte> encodedSize;
-    encodedSize.push_back(get_size_byte(size, 0));
-    encodedSize.push_back(get_size_byte(size, 1));
-    encodedSize.push_back(get_size_byte(size, 2));
-    encodedSize.push_back(get_size_byte(size, 3));
+    std::vector<byte> encodedSize(4);
+    for (size_t i = 0; i < 4; ++i) {
+        encodedSize[i] = static_cast<byte>(size & static_cast<size_t>(255));
+        size >>= NUM_BITS_IN_BYTE;
+    }
     return encodedSize;
 }
 
 size_t decode_size(const std::vector<byte> &bytes) {
     size_t size = 0;
     for (byte i = 0; i < 4; ++i) {
-        size |= static_cast<size_t>(bytes[i]) << i;
+        size |= static_cast<size_t>(bytes[i]) << (i * NUM_BITS_IN_BYTE);
     }
     return size;
 }
