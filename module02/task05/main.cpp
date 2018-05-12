@@ -1,69 +1,66 @@
-#include <iostream>
-#include <utility>
-#include <vector>
+#include <fstream>
 #include <cassert>
-
 #include "huffman.h"
 
-class Output : public IOutputStream {
+class FileInputStream : public IInputStream {
     public:
-        std::vector<byte> dataVector;
+        explicit FileInputStream(const char *fileName) {
+            fs.open(fileName, std::ios::binary);
+        }
+
+        bool Read(byte &value) override {
+            fs >> value;
+            return !fs.eof();
+        }
+
+        void Close() {
+            fs.close();
+        }
+
+    private:
+        std::ifstream fs;
+};
+
+class FileOutputStream : public IOutputStream {
+    public:
+        explicit FileOutputStream(const char *fileName) {
+            fs.open(fileName, std::ios::binary);
+        }
 
         void Write(byte value) override {
-            dataVector.push_back(value);
+            fs << value;
         }
+
+        void Close() {
+            fs.close();
+        }
+
+    private:
+        std::ofstream fs;
 };
 
-class OriginalInput : public IInputStream {
-    public:
-        OriginalInput() {
-            for (size_t i = 0; i < 10000; ++i) {
-                data.push_back(rand() % 255);
-            }
-        }
+int main(){
+    FileInputStream original("original.txt");
+    FileOutputStream compressed1("encoded.txt");
+    Encode(original, compressed1);
+    compressed1.Close();
+    original.Close();
 
-        bool Read(byte &value) override {
-            static size_t i = 0;
-            if (i < data.size()) {
-                value = data[i++];
-                return true;
-            }
-            return false;
-        }
+    FileInputStream compressed2("encoded.txt");
+    FileOutputStream decoded("decoded.txt");
+    Decode(compressed2, decoded);
+    compressed2.Close();
+    decoded.Close();
 
-    public:
-        std::vector<byte> data;
-};
+    std::ifstream origStream("original.txt");
+    std::ifstream decStream("decoded.txt");
 
-class CompressedInput : public IInputStream {
-    public:
-        explicit CompressedInput(std::vector<byte> cmp) :
-                bytes(std::move(cmp)) {}
+    while(!origStream.eof()) {
+        byte a, b;
+        origStream >> a;
+        decStream >> b;
+        assert(a == b);
+    }
 
-        bool Read(byte &value) override {
-            if (index < bytes.size()) {
-                value = bytes[index++];
-                return true;
-            }
-            return false;
-        }
-
-    public:
-        size_t index = 0;
-        std::vector<byte> bytes;
-};
-
-int main() {
-    OriginalInput origInput;
-    Output compOutput;
-
-    Encode(origInput, compOutput);
-
-    CompressedInput compInput(compOutput.dataVector);
-    Output origOutput;
-
-    Decode(compInput, origOutput);
-
-    assert(origInput.data == origOutput.dataVector);
     return 0;
 }

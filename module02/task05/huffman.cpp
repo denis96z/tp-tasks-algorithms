@@ -126,7 +126,12 @@ BitCodesTable create_table(const HuffmanTree &tree) {
                 break;
 
             case HuffmanTree::TraverseAction::STOP:
-                table.Add(*dataByte, BitCode(bits));
+                if (bits.empty()) {
+                    table.Add(*dataByte, BitCode(std::vector<bool>(1, false)));
+                }
+                else {
+                    table.Add(*dataByte, BitCode(bits));
+                }
                 break;
 
             case HuffmanTree::TraverseAction::TURN_BACK:
