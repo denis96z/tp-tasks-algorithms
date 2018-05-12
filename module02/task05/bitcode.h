@@ -71,14 +71,14 @@ void BitCode::Load(IInputStream &stream) {
     byte curByte = 0;
 
     assert(stream.Read(curByte) && curByte > 0);
-    dataBits = std::move(std::vector<bool>(static_cast<size_t>(curByte), false));
+    dataBits = std::vector<bool>(static_cast<size_t>(curByte), false);
 
     for (size_t i = 0, index = 0; i < dataBits.size(); ++i) {
         if (index == 0) {
             assert(stream.Read(curByte));
         }
 
-        dataBits.push_back((curByte & static_cast<byte>(1)) != 0);
+        dataBits[i] = (curByte & static_cast<byte>(1)) != 0;
 
         if (index == (NUM_BITS_IN_BYTE - 1)) {
             index = 0;
@@ -191,7 +191,8 @@ void BitCodesTable::Load(IInputStream &stream) {
 
     bitCodes = std::move(std::vector<std::shared_ptr<BitCode>>(NUM_BYTES, nullptr));
     for (byte counter = 0; counter < numCodes; ++counter) {
-        assert(stream.Read(curByte) && curByte > 0);
+        assert(stream.Read(curByte));
+        bitCodes[curByte] = std::make_shared<BitCode>(std::vector<bool>());
         bitCodes[curByte]->Load(stream);
     }
 }

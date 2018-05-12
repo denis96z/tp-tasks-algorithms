@@ -30,11 +30,11 @@ void Encode(IInputStream &original, IOutputStream &compressed) {
 
     table.Save(compressed);
 
-    auto encoded = std::move(encode_data(bytes, table));
-    for (auto b : encode_size(encoded.size())) {
+    for (auto b : encode_size(bytes.size())) {
         compressed.Write(b);
     }
 
+    auto encoded = std::move(encode_data(bytes, table));
     for (auto b : encoded) {
         compressed.Write(b);
     }
@@ -147,7 +147,8 @@ std::vector<byte> encode_data(const std::vector<byte> &originalBytes,
 
     for (byte b : originalBytes) {
         const auto &bits = table.GetCode(b).GetBits();
-        for (bool bt : bits) {
+        for (auto i = bits.rbegin(); i != bits.rend(); ++i) {
+            const auto &bt = *i;
             curByte |= static_cast<byte>(bt ? 1 : 0) << curIndex;
 
             if (curIndex == NUM_BYTES - 1) {
