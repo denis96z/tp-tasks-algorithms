@@ -89,21 +89,24 @@ AVLTree<T, C> &AVLTree<T, C>::Delete(const T &key) {
 
 template<typename T, typename C>
 AVLTree<T, C> &AVLTree<T, C>::Clear() {
-    std::queue<TreeNode*> queue;
-    queue.push(rootNode);
-    while (!queue.empty()) {
-        auto curNode = queue.front();
+    if (rootNode) {
+        std::queue<TreeNode *> queue;
+        queue.push(rootNode);
+        while (!queue.empty()) {
+            auto curNode = queue.front();
 
-        if (curNode->leftTree) {
-            queue.push(curNode->leftTree);
-        }
-        if (curNode->rightTree) {
-            queue.push(curNode->rightTree);
-        }
+            if (curNode->leftTree) {
+                queue.push(curNode->leftTree);
+            }
+            if (curNode->rightTree) {
+                queue.push(curNode->rightTree);
+            }
 
-        delete curNode;
-        queue.pop();
+            delete curNode;
+            queue.pop();
+        }
     }
+    return *this;
 }
 
 template<typename T, typename C>
