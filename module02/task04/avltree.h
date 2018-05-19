@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <cassert>
+#include <memory>
 
 template <typename T, typename C = Comparator<T>>
 class AVLTree {
@@ -67,9 +68,6 @@ private:
 
     TreeNode* InsertNode(TreeNode *node, const T &key);
     TreeNode* DeleteNode(TreeNode *node, const T &key);
-
-    TreeNode* FindMinNode(TreeNode *p);
-    TreeNode* DeleteMinNode(TreeNode *p);
 };
 
 template<typename T, typename C>
@@ -271,40 +269,56 @@ typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::DeleteNode(AVLTree::TreeNode *n
     if (!node) {
         return nullptr;
     }
+
     auto cmpResult = comparator.ApplyTo(key, node->key);
-    if (cmpResult < 0) {
-        node->leftTree = DeleteNode(node->leftTree, key);
-    }
-    else if (cmpResult > 0) {
-        node->rightTree = DeleteNode(node->rightTree, key);
-    }
-    else {
-        TreeNode* q = node->leftTree;
-        TreeNode* r = node->rightTree;
-        delete node;
-        if (!r) {
-            return q;
+    if (cmpResult == 0) {
+        // Удаляем лист.
+        if (!node->leftTree && !node->rightTree) {
+            delete [] node;
+            return nullptr;
         }
-        TreeNode* min = FindMinNode(r);
-        min->rightTree = DeleteMinNode(r);
-        min->leftTree = q;
-        return FixBalance(min);
+
+        // Удаляем узел, у которого два поддерева.
+        if (node->leftTree && node->rightTree) {
+            auto prevNode = &node;
+            auto curNode = node->rightTree;
+
+            while (curNode->leftTree) {
+                *prevNode = curNode;
+                curNode = curNode->leftTree;
+            }
+
+            node->key = curNode->key;
+            if (curNode->rightTree) {
+                auto tempNode = curNode;
+                if (*prevNode == node) {
+                    (*prevNode)->rightTree = curNode->rightTree;
+                }
+                else {
+                    (*prevNode)->leftTree = curNode->rightTree;
+                }
+                delete [] tempNode;
+            }
+            else {
+                delete [] curNode;
+                if (*prevNode == node) {
+                    (*prevNode)->rightTree = nullptr;
+                }
+                else {
+                    (*prevNode)->leftTree = nullptr;
+                }
+            }
+
+            return FixBalance(node);
+        }
+
+        // Удаляем узел, у которого одно поддерево.
+        auto tempNode = node->leftTree ? node->leftTree : node->rightTree;
+        delete [] node;
+        return tempNode;
     }
+
     return FixBalance(node);
-}
-
-template<typename T, typename C>
-typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::FindMinNode(AVLTree::TreeNode *p) {
-    return p->leftTree ? FindMinNode(p->leftTree) : p;
-}
-
-template<typename T, typename C>
-typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::DeleteMinNode(AVLTree::TreeNode *p) {
-    if (!p->leftTree) {
-        return p->rightTree;
-    }
-    p->leftTree = DeleteMinNode(p->leftTree);
-    return FixBalance(p);
 }
 
 #endif //AVLTREE_H
