@@ -329,7 +329,7 @@ typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::DeleteNode(AVLTree::TreeNode *n
         return tempNode;
     }
 
-    return FixBalance(node);
+    return FixBalance(DeleteNode(cmpResult < 0 ? node->leftTree : node->rightTree, key));
 }
 
 #endif //AVLTREE_H
