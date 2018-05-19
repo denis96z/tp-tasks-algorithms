@@ -3,9 +3,9 @@
 
 #include "comparator.h"
 
+#include <queue>
 #include <cstdint>
 #include <cassert>
-#include <memory>
 
 template <typename T, typename C = Comparator<T>>
 class AVLTree {
@@ -89,10 +89,21 @@ AVLTree<T, C> &AVLTree<T, C>::Delete(const T &key) {
 
 template<typename T, typename C>
 AVLTree<T, C> &AVLTree<T, C>::Clear() {
-    while (rootNode) {
-        rootNode = DeleteNode(rootNode, rootNode->key);
+    std::queue<TreeNode*> queue;
+    queue.push(rootNode);
+    while (!queue.empty()) {
+        auto curNode = queue.front();
+
+        if (curNode->leftTree) {
+            queue.push(curNode->leftTree);
+        }
+        if (curNode->rightTree) {
+            queue.push(curNode->rightTree);
+        }
+
+        delete curNode;
+        queue.pop();
     }
-    return *this;
 }
 
 template<typename T, typename C>
@@ -274,7 +285,7 @@ typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::DeleteNode(AVLTree::TreeNode *n
     if (cmpResult == 0) {
         // Удаляем лист.
         if (!node->leftTree && !node->rightTree) {
-            delete [] node;
+            delete node;
             return nullptr;
         }
 
@@ -297,10 +308,10 @@ typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::DeleteNode(AVLTree::TreeNode *n
                 else {
                     (*prevNode)->leftTree = curNode->rightTree;
                 }
-                delete [] tempNode;
+                delete tempNode;
             }
             else {
-                delete [] curNode;
+                delete curNode;
                 if (*prevNode == node) {
                     (*prevNode)->rightTree = nullptr;
                 }
@@ -314,7 +325,7 @@ typename AVLTree<T, C>::TreeNode *AVLTree<T, C>::DeleteNode(AVLTree::TreeNode *n
 
         // Удаляем узел, у которого одно поддерево.
         auto tempNode = node->leftTree ? node->leftTree : node->rightTree;
-        delete [] node;
+        delete node;
         return tempNode;
     }
 
