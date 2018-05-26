@@ -17,6 +17,7 @@ class Comparator {
         Comparator& operator =(Comparator &&comparator) noexcept = default;
 
         virtual int ApplyTo(const T &left, const T &right) const = 0;
+        virtual bool IsDeleted(const T &item) const = 0;
 };
 
 template <typename T, typename C = Comparator<T>>

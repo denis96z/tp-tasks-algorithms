@@ -6,6 +6,10 @@ public:
     int ApplyTo(const std::string &left, const std::string &right) const override {
         return left.compare(right);
     }
+
+    bool IsDeleted(const std::string &item) const override {
+        return item.empty();
+    }
 };
 
 class StrHash : public Hash<std::string> {
@@ -20,7 +24,7 @@ public:
 };
 
 int main() {
-    HashTable<std::string, "", StrCmp, StrHash> ht;
+    HashTable<std::string, StrCmp, StrHash> ht;
 
     char command = 0;
     std::string key;
