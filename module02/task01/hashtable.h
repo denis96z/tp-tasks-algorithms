@@ -3,8 +3,10 @@
 
 #include "container.h"
 
-#include <cstddef>
 #include <vector>
+#include <memory>
+
+#include <cstddef>
 #include <cassert>
 
 template <typename T>
@@ -22,10 +24,10 @@ class Hash {
         virtual size_t Get(const T &item, size_t bufSize) const = 0;
 };
 
-template <typename T, typename C = Comparator<T>, typename H = Hash<T>>
+template <typename T, T DEL, typename C = Comparator<T>, typename H = Hash<T>>
 class HashTable {
     public:
-        HashTable();
+        HashTable() = default;
         HashTable(const HashTable &hashTable) = delete;
         HashTable(HashTable &&hashTable) noexcept = default;
 
@@ -34,28 +36,24 @@ class HashTable {
         HashTable& operator =(const HashTable &hashTable) = delete;
         HashTable& operator =(HashTable &&hashTable) noexcept = default;
 
-        HashTable& Add(const T &item);
-        HashTable& Remove(const T &item);
-
         bool TryAdd(const T &item);
         bool TryDelete(const T &item);
         bool Has(const T &item);
+
+        HashTable& Add(const T &item);
+        HashTable& Remove(const T &item);
 
         HashTable& operator <<(const T &item);
         HashTable& operator >>(const T &item);
 
     private:
-        enum class BufferNodeState {
-            EMPTY, ACTIVE, DELETED
-        };
-
         static const size_t MIN_BUFFER_SIZE = 8;
 
-        using buffer_node_t = std::pair<BufferNodeState, T>;
+        using buffer_node_t = std::unique_ptr<T>;
         using buffer_t = std::vector<buffer_node_t>;
 
-        size_t numItems;
-        buffer_t buffer;
+        size_t numItems = 0;
+        buffer_t buffer{};
 
         H hash{};
         C comparator{};
@@ -68,23 +66,109 @@ class HashTable {
         void ResizeBuffer(size_t newSize);
 };
 
-template <typename T, typename C, typename H>
-HashTable<T, C, H>::HashTable() : buffer(MIN_BUFFER_SIZE,
-                                         std::make_pair(BufferNodeState::EMPTY, T())),
-                                  numItems(0), hash(), comparator() {
+template<typename T, T DEL, typename C, typename H>
+bool HashTable<T, DEL, C, H>::TryAdd(const T &item) {
+    size_t index = hash.Get(item, buffer.size());
+    assert(index >= 0 && index < buffer.size());
+
+    int64_t delIndex = -1;
+
+    for (size_t i = 1; i <= buffer.size(); ++i) {
+        switch (buffer[index]) {
+            case nullptr:
+                buffer[index] = std::make_unique<T>(item);
+                ++numItems;
+                if (ShouldIncBuffer()) {
+                    IncBuffer();
+                }
+                return true;
+
+            case DEL:
+                if (delIndex == -1) {
+                    delIndex = index;
+                    index = (index + i) % buffer.size();
+                }
+                break;
+
+            default:
+                if (comparator.ApplyTo(*(buffer[index]), item) == 0) {
+                    return false;
+                }
+                index = (index + i) % buffer.size();
+                break;
+        }
+    }
+
+    if (delIndex != -1) {
+        buffer[delIndex] = std::make_unique<T>(item);
+        ++numItems;
+        if (ShouldIncBuffer()) {
+            IncBuffer();
+        }
+        return true;
+    }
+
+    return false;
 }
 
-template<typename T, typename C, typename H>
-HashTable<T, C, H> &HashTable<T, C, H>::Add(const T &item) {
+template<typename T, T DEL, typename C, typename H>
+bool HashTable<T, DEL, C, H>::TryDelete(const T &item) {
+    return false;
+}
+
+template<typename T, T DEL, typename C, typename H>
+bool HashTable<T, DEL, C, H>::Has(const T &item) {
+    return false;
+}
+
+template<typename T, T DEL, typename C, typename H>
+HashTable<T, DEL, C, H> &HashTable<T, DEL, C, H>::Add(const T &item) {
     TryAdd(item);
     return *this;
 }
 
-template<typename T, typename C, typename H>
-HashTable<T, C, H> &HashTable<T, C, H>::Remove(const T &item) {
+template<typename T, T DEL, typename C, typename H>
+HashTable<T, DEL, C, H> &HashTable<T, DEL, C, H>::Remove(const T &item) {
     TryDelete(item);
     return *this;
 }
+
+template<typename T, T DEL, typename C, typename H>
+HashTable<T, DEL, C, H> &HashTable<T, DEL, C, H>::operator<<(const T &item) {
+    return Add(item);
+}
+
+template<typename T, T DEL, typename C, typename H>
+HashTable<T, DEL, C, H> &HashTable<T, DEL, C, H>::operator>>(const T &item) {
+    return Remove(item);
+}
+
+template<typename T, T DEL, typename C, typename H>
+bool HashTable<T, DEL, C, H>::ShouldIncBuffer() const {
+    return false;
+}
+
+template<typename T, T DEL, typename C, typename H>
+bool HashTable<T, DEL, C, H>::ShouldDecBuffer() const {
+    return false;
+}
+
+template<typename T, T DEL, typename C, typename H>
+void HashTable<T, DEL, C, H>::IncBuffer() {
+
+}
+
+template<typename T, T DEL, typename C, typename H>
+void HashTable<T, DEL, C, H>::DecBuffer() {
+
+}
+
+template<typename T, T DEL, typename C, typename H>
+void HashTable<T, DEL, C, H>::ResizeBuffer(size_t newSize) {
+
+}
+
+/*template <typename T, typename C, typename H>
 
 template<typename T, typename C, typename H>
 bool HashTable<T, C, H>::TryAdd(const T &item) {
@@ -248,6 +332,6 @@ void HashTable<T, C, H>::ResizeBuffer(size_t newSize) {
     }
 
     buffer = std::move(newBuf);
-}
+}*/
 
 #endif //HASHTABLE_H

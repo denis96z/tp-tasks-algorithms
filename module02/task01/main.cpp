@@ -20,7 +20,7 @@ public:
 };
 
 int main() {
-    HashTable<std::string, StrCmp, StrHash> ht;
+    HashTable<std::string, "", StrCmp, StrHash> ht;
 
     char command = 0;
     std::string key;
