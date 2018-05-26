@@ -2,10 +2,11 @@
 #define BINARY_TREE_H
 
 #include <cstddef>
-#include <memory>
 #include <cassert>
-#include <algorithm>
+
 #include <stack>
+#include <queue>
+#include <algorithm>
 
 template <typename T>
 class Comparator {
@@ -59,7 +60,7 @@ class BinaryTree {
         BinaryTree& operator <<(const T &item);
         BinaryTree& operator >>(const T &item);
 
-        void PostOrderTraversal();
+        void PostOrderTraversal() const;
 
         const T& FindMin() const;
         const T& FindMax() const;
@@ -73,17 +74,12 @@ class BinaryTree {
             explicit TreeNode(const T &item) : item(item) {}
         };
 
-        enum class TraverseOrder {
-            PRE_ORDER, IN_ORDER, POST_ORDER
-        };
-
         TreeNode *rootNode = nullptr;
 
         C comparator{};
         TR traversal{};
 
         void DeleteNode(TreeNode *&node);
-        void Traverse(const TreeNode *node, TraverseOrder traverseOrder) const;
 };
 
 class EmptyContainerException : public std::exception {
@@ -119,9 +115,24 @@ BinaryTree<T, C, TR> &BinaryTree<T, C, TR>::Delete(const T &item) {
 
 template<typename T, typename C, typename TR>
 BinaryTree<T, C, TR> &BinaryTree<T, C, TR>::Clear() {
-    while (rootNode) {
-        DeleteNode(rootNode);
+    if (rootNode) {
+        std::queue<TreeNode *> queue;
+        queue.push(rootNode);
+        while (!queue.empty()) {
+            auto curNode = queue.front();
+
+            if (curNode->leftNode) {
+                queue.push(curNode->leftNode);
+            }
+            if (curNode->rightNode) {
+                queue.push(curNode->rightNode);
+            }
+
+            delete curNode;
+            queue.pop();
+        }
     }
+    return *this;
 }
 
 template<typename T, typename C, typename TR>
@@ -135,8 +146,37 @@ BinaryTree<T, C, TR> &BinaryTree<T, C, TR>::operator>>(const T &item) {
 }
 
 template<typename T, typename C, typename TR>
-void BinaryTree<T, C, TR>::PostOrderTraversal() {
-    Traverse(rootNode, TraverseOrder::IN_ORDER);
+void BinaryTree<T, C, TR>::PostOrderTraversal() const {
+    if (!rootNode) {
+        return;
+    }
+
+    std::stack<TreeNode*> stack;
+    auto curNode = rootNode;
+
+    while (curNode || !stack.empty()){
+        if (!stack.empty()){
+            curNode = stack.top();
+            stack.pop();
+
+            if (!stack.empty() && curNode->rightNode == stack.top()){
+                curNode = stack.top();
+                stack.pop();
+            }
+            else{
+                traversal.ApplyTo(curNode->item);
+                curNode = nullptr;
+            }
+        }
+        while (curNode) {
+            stack.push(curNode);
+            if (curNode->rightNode){
+                stack.push(curNode->rightNode);
+                stack.push(curNode);
+            }
+            curNode = curNode->leftNode;
+        }
+    }
 }
 
 template<typename T, typename C, typename TR>
@@ -229,66 +269,6 @@ void BinaryTree<T, C, TR>::DeleteNode(BinaryTree::TreeNode *&node) {
          : minParent->rightNode) = min->rightNode;
         delete min;
     }
-}
-
-template<typename T, typename C, typename TR>
-void BinaryTree<T, C, TR>::Traverse(const TreeNode *node,
-                                    BinaryTree::TraverseOrder traverseOrder) const {
-    enum State {
-        START, LEFT, RIGHT, PARENT
-    };
-
-    State state = START;
-    std::stack<const TreeNode*> stack;
-
-    do {
-        switch (state) {
-            case START:
-                state = LEFT;
-                break;
-
-            case LEFT:
-                if (traverseOrder == TraverseOrder::PRE_ORDER) {
-                    traversal.ApplyTo(node->item);
-                }
-                if (node->leftNode) {
-                    stack.push(node);
-                    node = node->leftNode;
-                    state = LEFT;
-                } else {
-                    state = RIGHT;
-                }
-                break;
-
-            case RIGHT:
-                if (traverseOrder == TraverseOrder::POST_ORDER) {
-                    traversal.ApplyTo(node->item);
-                }
-                if (node->rightNode) {
-                    stack.push(node);
-                    node = node->rightNode;
-                    state = LEFT;
-                } else {
-                    state = PARENT;
-                }
-                break;
-
-            case PARENT:
-                if (traverseOrder == TraverseOrder::IN_ORDER) {
-                    traversal.ApplyTo(node->item);
-                }
-                if (stack.empty()) {
-                    state = START;
-                } else if (stack.top()->leftNode == node) {
-                    node = stack.top(); stack.pop();
-                    state = RIGHT;
-                } else if (stack.top()->rightNode == node) {
-                    node = stack.top(); stack.pop();
-                    state = PARENT;
-                }
-                break;
-        }
-    } while (state != START);
 }
 
 #endif //BINARY_TREE_H
