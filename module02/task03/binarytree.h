@@ -29,12 +29,6 @@ class BinaryTree : public Tree<T, C, TR> {
         const T& FindMax() const override;
 
         size_t CountMaxWidth() const override;
-        size_t CountMaxHeight() const override;
-
-        void PreOrderTraverse() override;
-        void InOrderTraverse() override;
-        void PostOrderTraverse() override;
-        void LevelOrderTraverse() override;
 
         Tree<T, C, TR>& operator<<(const T &item) override;
         Tree<T, C, TR>& operator>>(const T &item) override;
@@ -48,17 +42,9 @@ class BinaryTree : public Tree<T, C, TR> {
             explicit TreeNode(const T &item) : item(item) {}
         };
 
-        enum class TraversalOrder {
-            PRE_ORDER, IN_ORDER, POST_ORDER, LEVEL_ORDER
-        };
-
         TreeNode *rootNode = nullptr;
 
         void DeleteNode(TreeNode *&node);
-        void Traverse(const TreeNode *node, TraversalOrder traverseOrder) const;
-
-        size_t CountWidth(const TreeNode *node, size_t level) const;
-        size_t CountHeight(const TreeNode *node) const;
 };
 
 template<typename T, typename C, typename TR>
@@ -140,8 +126,22 @@ Tree<T, C, TR> &BinaryTree<T, C, TR>::Delete(const T &item) {
 
 template<typename T, typename C, typename TR>
 Tree<T, C, TR> &BinaryTree<T, C, TR>::Clear() {
-    while (rootNode) {
-        DeleteNode(rootNode);
+    if (rootNode) {
+        std::queue<TreeNode *> queue;
+        queue.push(rootNode);
+        while (!queue.empty()) {
+            auto curNode = queue.front();
+
+            if (curNode->leftNode) {
+                queue.push(curNode->leftNode);
+            }
+            if (curNode->rightNode) {
+                queue.push(curNode->rightNode);
+            }
+
+            delete curNode;
+            queue.pop();
+        }
     }
     return *this;
 }
@@ -172,41 +172,34 @@ const T &BinaryTree<T, C, TR>::FindMax() const {
 
 template<typename T, typename C, typename TR>
 size_t BinaryTree<T, C, TR>::CountMaxWidth() const {
-    size_t maxWidth = 0;
-    size_t h = CountHeight(rootNode);
-    for (size_t i = 1; i < h; ++i)
+    if (rootNode == nullptr) {
+        return 0;
+    }
+
+    size_t result = 0;
+
+    std::queue<TreeNode*> q;
+    q.push(rootNode);
+
+    while (!q.empty())
     {
-        auto width = CountWidth(rootNode, i);
-        if (width > maxWidth) {
-            maxWidth = width;
+        size_t count = q.size();
+        result = std::max(count, result);
+
+        while (count--) {
+            TreeNode *tempNode = q.front();
+            q.pop();
+
+            if (tempNode->leftNode != NULL) {
+                q.push(tempNode->leftNode);
+            }
+            if (tempNode->rightNode != NULL) {
+                q.push(tempNode->rightNode);
+            }
         }
     }
-    return maxWidth;
-}
 
-template<typename T, typename C, typename TR>
-size_t BinaryTree<T, C, TR>::CountMaxHeight() const {
-    return CountHeight(rootNode);
-}
-
-template<typename T, typename C, typename TR>
-void BinaryTree<T, C, TR>::PreOrderTraverse() {
-    throw NotImplementedException();
-}
-
-template<typename T, typename C, typename TR>
-void BinaryTree<T, C, TR>::InOrderTraverse() {
-    throw NotImplementedException();
-}
-
-template<typename T, typename C, typename TR>
-void BinaryTree<T, C, TR>::PostOrderTraverse() {
-    Traverse(rootNode, TraversalOrder::IN_ORDER);
-}
-
-template<typename T, typename C, typename TR>
-void BinaryTree<T, C, TR>::LevelOrderTraverse() {
-    throw NotImplementedException();
+    return result;
 }
 
 template<typename T, typename C, typename TR>
@@ -245,89 +238,6 @@ void BinaryTree<T, C, TR>::DeleteNode(TreeNode *&node) {
          : minParent->rightNode) = min->rightNode;
         delete min;
     }
-}
-
-template<typename T, typename C, typename TR>
-void BinaryTree<T, C, TR>::Traverse(const TreeNode *node,
-                                    TraversalOrder traverseOrder) const {
-    enum State {
-        START, LEFT, RIGHT, PARENT
-    };
-
-    State state = START;
-    std::stack<const TreeNode*> stack;
-
-    do {
-        switch (state) {
-            case START:
-                state = LEFT;
-                break;
-
-            case LEFT:
-                if (traverseOrder == TraversalOrder::PRE_ORDER) {
-                    this->GetTraversal().ApplyTo(node->item);
-                }
-                if (node->leftNode) {
-                    stack.push(node);
-                    node = node->leftNode;
-                    state = LEFT;
-                } else {
-                    state = RIGHT;
-                }
-                break;
-
-            case RIGHT:
-                if (traverseOrder == TraversalOrder::POST_ORDER) {
-                    this->GetTraversal().ApplyTo(node->item);
-                }
-                if (node->rightNode) {
-                    stack.push(node);
-                    node = node->rightNode;
-                    state = LEFT;
-                } else {
-                    state = PARENT;
-                }
-                break;
-
-            case PARENT:
-                if (traverseOrder == TraversalOrder::IN_ORDER) {
-                    this->GetTraversal().ApplyTo(node->item);
-                }
-                if (stack.empty()) {
-                    state = START;
-                } else if (stack.top()->leftNode == node) {
-                    node = stack.top(); stack.pop();
-                    state = RIGHT;
-                } else if (stack.top()->rightNode == node) {
-                    node = stack.top(); stack.pop();
-                    state = PARENT;
-                }
-                break;
-        }
-    } while (state != START);
-}
-
-template<typename T, typename C, typename TR>
-size_t BinaryTree<T, C, TR>::CountWidth(const BinaryTree::TreeNode *node,
-                                        size_t level) const {
-    if (!node) {
-        return 0;
-    }
-    if (level == 1) {
-        return 1;
-    }
-    return CountWidth(node->leftNode, level - 1) +
-           CountWidth(node->rightNode, level - 1);
-}
-
-template<typename T, typename C, typename TR>
-size_t BinaryTree<T, C, TR>::CountHeight(const BinaryTree::TreeNode *node) const {
-    if(!node) {
-        return 0;
-    }
-    size_t hLeft = node->leftNode ? CountHeight(node->leftNode) : 0;
-    size_t hRight = node->rightNode ? CountHeight(node->rightNode) : 0;
-    return(std::max(hLeft, hRight) + 1);
 }
 
 #endif //BINTREE_H
